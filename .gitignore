@@ -1,0 +1,5 @@
+# skip vim tmp files
+*.swp
+
+# skip config for Visual Studio Code
+.vscode/*
