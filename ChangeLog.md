@@ -9,6 +9,7 @@ This document is to log all changes for this project.
 - Update readme to link git tutorial document.
 - Update `git_tutorial/README.md` to show how to change configuration for a project.
 - Update `git_tutorial/README.md` to show how to create a project for Git.
+- Update `git_tutorial/README.md` to add introduction.
 
 ### Changed
 
