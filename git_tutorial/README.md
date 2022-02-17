@@ -22,7 +22,7 @@ git config --global user.email "joe@test.tw"
 如果只想針對一個Git管理的專案設定特定的使用者名稱和Email，可以使用下面的指令：
 ```bash
 git config --local user.name "Joe"
-git config --local user.email "joe@test.tw"
+git config --local user.email "joe@email.tw"
 ```
 重點是`git config`後面接的參數`--global`，只要有這個參數，就可以修改全域的參數。在`git config`後面接`--local`就可以只針對當前的專案調整設定。
 
@@ -158,11 +158,14 @@ $ git commit -m "Init commit"
 接下來用範例來說明參數`--amend`的功能。首先，我們再建立一個檔案`test.txt`，然後使用帶有參數`--amend`的`git commit`：
 ```bash
 $ touch test.txt
+$ git add test.txt
 $ git commit --amend
-[master ca14aaa] Init commit
- Date: Tue Feb 15 16:13:44 2022 +0800
- 1 file changed, 2 insertions(+)
+[master 9eee82b] Init commit
+ Date: Thu Feb 17 10:55:07 2022 +0800
+ 2 files changed, 2 insertions(+)
  create mode 100644 Readme.md
+ create mode 100644 test.txt
+
 ```
 上面第一行指令在Bash中是用來產生空檔案，下一行指令輸入完畢，會跳出一個編輯器，上面會顯示上一次提交的訊息，也就是`Init commit`這個訊息。當我們儲存畢關閉編輯器時，更動訊息`Init commit`除了包含前面建立的`Readme.md`以外，還有剛剛新增的檔案`test.txt`。後續還會說明`--amend`適合的情境。
 
@@ -173,3 +176,96 @@ $ git commit --amend
 在這種情況下，既然我們已經使用Git來管理專案了，我們就可以使用更簡單的方法來解決，那就是使用`git commit`提交訊息到儲存庫中。只要用很簡短又明確的訊息來說明，以後我們只要看了這段訊息就知道新加的程式碼的用途，以及什麼時候加了那幾行程式碼。
 
 至於應該要提交什麼樣的訊息，這點只要能用文字明確描述這次提交的訊息中，有哪些檔案更動過，以及為何要更動就可以了。其實只要自己看得懂，提交什麼樣的訊息都可以，當然如果有其他人也共同維護，其他人也最好能看得懂。雖然前面的範例輸入的訊息是英文，其實也可以使用中文。
+
+### 查看歷史紀錄: `git log`
+在上一小節中，我們已經把`Readme.md`和`test.txt`提交到儲存庫中，接下來該說明如何查閱我們先前提交的資訊。我們可以使用`git log`來查閱提交的資訊，該指令用法如下：
+```bash
+$ git log
+# --oneline:  每一個提交訊息只以一行顯示
+# --graph:    以圖形的方式來呈現
+```
+`git log`有兩個參數可以使用，第一個參數`--oneline`會把每個提交訊息以一行來顯示，如果想快速查看提交的歷史紀錄，這個會很好用。第二個參數`--graph`則會以文字的方式，來呈現完整的歷史紀錄，其實與直接使用`git log`顯示出來的資訊類似，稍後我們用範例來說明這兩者之間的差異。
+
+現在我們使用`git log`來看看專案`testGit`提交訊息的歷史紀錄。
+```bash
+$ git log
+commit 9eee82b4d028aa45f30913421708efd801938062 (HEAD -> master)
+Author: Joe <joe@email.tw>
+Date:   Thu Feb 17 10:55:07 2022 +0800
+
+    Init commit
+```
+`git log`會顯示的資訊有幾個，我們一個一個了解吧。第一行`commit`後面接的那段`74d7f90a2d21fc56fb59efda49252972d6e3888b`是一組十六進位的數字，它是使用SHA-1(Secure Hash Algorithm 1)演算法計算出來的結果，這組數字可以看做是一個編號，在這裡它代表這個提交訊息的編號，後面會詳細說明。在第一行最後面`(HEAD -> master)`，這個也暫時先不管，後面再詳細說明。第二行則顯示提交這個訊息的作者和Email。第三行則是顯示提交這個訊息的時間，最下面的則是這個提交的訊息。
+
+如果我們只想快速查看提交訊息的歷史紀錄和SHA-1的編號，我們可以這樣使用`git log`：
+```bash
+$ git log --oneline
+9eee82b (HEAD -> master) Init commit
+```
+我們可以看到`git log`會以一行的方式來顯示一個提交的訊息，這包刮SHA-1的編號和訊息。
+
+接下來我們來說明參數`--graph`對`git log`會有什麼樣的輸出資訊。在說明之前，我們再加入一個空檔案`cat.txt`，並提交一次訊息。
+```bash
+$ touch cat.txt
+$ git add .
+$ git commit -m "Add cat.txt"
+[master b9cd707] Add cat.txt
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 cat.txt
+```
+然後我們再編輯`test.txt`，並且提交一次訊息。`test.txt`的內容如下：
+```
+This file is test.
+```
+接著，我們使用`git add .`來把`test.txt`加進暫存區中，然後使用`git commit`來提交訊息，當Git跳出編輯器時，請輸入下面的訊息：
+```
+Update test.txt
+
+Update test.txt
+```
+在做完這些事之後，我們來看看提交訊息的歷史紀錄吧。
+```bash
+$ git log
+commit ea2653c0928ddd75e01e87c70f31e561158251e0 (HEAD -> master)
+Author: Joe <joe@email.tw>
+Date:   Thu Feb 17 13:51:59 2022 +0800
+
+    Update test.txt
+
+    Update test.txt.
+
+commit b9cd7079788b33a7e4191c990a276c59b668e87d
+Author: Joe <joe@email.tw>
+Date:   Thu Feb 17 11:58:31 2022 +0800
+
+    Add cat.txt
+
+commit 9eee82b4d028aa45f30913421708efd801938062
+Author: Joe <joe@email.tw>
+Date:   Thu Feb 17 10:55:07 2022 +0800
+
+    Init commit
+
+$ git log --graph
+* commit ea2653c0928ddd75e01e87c70f31e561158251e0 (HEAD -> master)
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 13:51:59 2022 +0800
+|
+|     Update test.txt
+|
+|     Update test.txt.
+|
+* commit b9cd7079788b33a7e4191c990a276c59b668e87d
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 11:58:31 2022 +0800
+|
+|     Add cat.txt
+|
+* commit 9eee82b4d028aa45f30913421708efd801938062
+  Author: Joe <joe@email.tw>
+  Date:   Thu Feb 17 10:55:07 2022 +0800
+
+      Init commit
+
+```
+有注意到`git log`和`git log --graph`顯示資訊的差異吧。當我們使用`git log`時，得到的是完整的每筆提交的訊息，其中包括SHA-1的編號、提交的作者與Email和提交的訊息。然而，我們使用`git log --graph`時，除了得到跟`git log`相同的資訊以外，最右邊還會有`*`和`|`構成的圖形，這個圖形可以想像成時間線，每個`*`標示的都是提交訊息的時間點。未來提到分支(branch)時，`git log --graph`有時就想看分支之間的關係就會很好用。
