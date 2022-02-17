@@ -225,14 +225,15 @@ Update test.txt
 ```
 在做完這些事之後，我們來看看提交訊息的歷史紀錄吧。
 ```bash
+# 使用 git log 來顯示歷史紀錄
 $ git log
-commit ea2653c0928ddd75e01e87c70f31e561158251e0 (HEAD -> master)
+commit a8b412ecc331c7df85df9c1f6cec2e6a9d092283 (HEAD -> master)
 Author: Joe <joe@email.tw>
 Date:   Thu Feb 17 13:51:59 2022 +0800
 
     Update test.txt
 
-    Update test.txt.
+    I update test.txt.
 
 commit b9cd7079788b33a7e4191c990a276c59b668e87d
 Author: Joe <joe@email.tw>
@@ -246,14 +247,15 @@ Date:   Thu Feb 17 10:55:07 2022 +0800
 
     Init commit
 
+# 使用git log --graph
 $ git log --graph
-* commit ea2653c0928ddd75e01e87c70f31e561158251e0 (HEAD -> master)
+* commit a8b412ecc331c7df85df9c1f6cec2e6a9d092283 (HEAD -> master)
 | Author: Joe <joe@email.tw>
 | Date:   Thu Feb 17 13:51:59 2022 +0800
 |
 |     Update test.txt
 |
-|     Update test.txt.
+|     I update test.txt.
 |
 * commit b9cd7079788b33a7e4191c990a276c59b668e87d
 | Author: Joe <joe@email.tw>
@@ -267,5 +269,8 @@ $ git log --graph
 
       Init commit
 
+
 ```
 有注意到`git log`和`git log --graph`顯示資訊的差異吧。當我們使用`git log`時，得到的是完整的每筆提交的訊息，其中包括SHA-1的編號、提交的作者與Email和提交的訊息。然而，我們使用`git log --graph`時，除了得到跟`git log`相同的資訊以外，最右邊還會有`*`和`|`構成的圖形，這個圖形可以想像成時間線，每個`*`標示的都是提交訊息的時間點。未來提到分支(branch)時，`git log --graph`有時就想看分支之間的關係就會很好用。
+
+上面的範例中再補充一點，我們在`test.txt`中輸入了文字，並且在提交時輸入了兩行訊息，這兩行中還多了一行空行。有時我們可能是為了解決某個BUG，而需要修改很多檔案，我們提交訊息時最好完整點，以後在查看時會比較清楚這次修改了什麼，又為了解決什麼問題而修改。以我們修改`test.txt`為例，我們在提交訊息的第一行可以看做是標題，第三行則是用更完整說明我們對`test.txt`做了哪些事，而第二行的空行則用來區隔標題與詳細內容。

@@ -12,6 +12,7 @@ This document is to log all changes for this project.
 - Update `git_tutorial/README.md` to add introduction.
 - Update `git_tutorial/README.md` to add how to add a file into Git repository.
 - Update `git_tutorial/README.md` to show how to watch history.
+- Update the section that is how to watch history in `git_tutorial/README.md`.
 
 ### Changed
 
