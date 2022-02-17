@@ -274,3 +274,158 @@ $ git log --graph
 有注意到`git log`和`git log --graph`顯示資訊的差異吧。當我們使用`git log`時，得到的是完整的每筆提交的訊息，其中包括SHA-1的編號、提交的作者與Email和提交的訊息。然而，我們使用`git log --graph`時，除了得到跟`git log`相同的資訊以外，最右邊還會有`*`和`|`構成的圖形，這個圖形可以想像成時間線，每個`*`標示的都是提交訊息的時間點。未來提到分支(branch)時，`git log --graph`有時就想看分支之間的關係就會很好用。
 
 上面的範例中再補充一點，我們在`test.txt`中輸入了文字，並且在提交時輸入了兩行訊息，這兩行中還多了一行空行。有時我們可能是為了解決某個BUG，而需要修改很多檔案，我們提交訊息時最好完整點，以後在查看時會比較清楚這次修改了什麼，又為了解決什麼問題而修改。以我們修改`test.txt`為例，我們在提交訊息的第一行可以看做是標題，第三行則是用更完整說明我們對`test.txt`做了哪些事，而第二行的空行則用來區隔標題與詳細內容。
+
+### 檔案的刪除與重新命名和搬移
+交給Git管控的檔案也可以刪除掉，當然也可以重新命名。
+
+#### 刪除檔案
+我們先從檔案的刪除說起好了，我們有三個方法可以刪除檔案，第一個方法是直接在檔案總管上刪除檔案，第二個方法則是使用Bash提供的指令來刪除檔案。現在我們使用指令來刪除掉檔案`cat.txt`：
+```bash
+$ rm [-rf] 檔名或目錄
+# -r  : 主要用於刪除目錄以及該目錄下的子目錄和檔案
+# -f  : 強制刪除的意思，會無視任何情況直接刪除
+
+$ rm cat.txt
+```
+至於第三個方法則是使用Git提供的指令來幫我們刪除檔案，這個指令就是`git rm`，用法有點類似Bash的`rm`，用法如下：
+```bash
+$ git rm [-rf] [--cached] 檔案或目錄
+# -r        : 主要用來刪除一個目錄
+# -f        : 強制刪除的意思，使用了它就會什麼都不管就把檔案和目錄刪除掉，這個要小心使用
+# --cached  : 用來把檔案從Git的儲存庫中移除，並不是真的要刪除檔案
+```
+有用過Bash的`rm`就會知道，在不使用`-r`的情況下只能刪除檔案，如果想刪除掉一整個目錄，就要使用`-r`，這個時候包括該目錄下所有的子目錄和檔案都會全部被刪除。至於那個`-f`，有時刪除檔案可能會因為某些原因而導致沒辦法刪掉，這個時候就可以使用這個參數來強制刪除。最後的`--cached`則不會真的刪除檔案，它只是把檔案從Git的儲存庫中移除，該檔案就不再被Git管控，但是該檔案還是存在的。
+
+接下來用範例說明如何刪除檔案。我們就用`rm`來刪除檔案`cat.txt`，然後看看當前專案的狀態吧。
+```bash
+$ rm cat.txt
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        deleted:    cat.txt
+```
+在刪除檔案以後，使用`git status`查看專案的狀態，可以發現Git告訴我們有檔案刪除。這裡要解釋一下，對Git來說刪除檔案也是一種檔案的更動，也就是檔案的狀態本來是存在的，而現在則消失了。因為檔案被刪除也被視為是一種檔案的更動，所以我們當然要把這個更動提交度到儲存庫裡：
+```bash
+$ git add .
+$ git commit -m "Delete cat.txt"
+[master 395bee4] Delete cat.txt
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ delete mode 100644 cat.txt
+```
+這邊要提一下`git rm`和`rm`之間的差別，當我們使用`rm`刪除檔案時，需要使用`git add .`把檔案的刪除狀態搬移到暫存區中，然後使用`git commit`來提交到儲存庫中。可是當我們使用`git rm`時，這個動作相當於`rm`和`git add .`這兩個指令都做。也就是說，如果不想下這麼多指令，可以直接使用`git rm`，然後使用`git commit`提交到儲存庫，就可以把檔案刪除掉。
+
+我們再來談談`git rm --cached`，有時我們已經把一個檔案提交到Git的儲存庫上了，事後才發現這個檔案不應該讓Git管控，可是這個檔案也許是程式碼運作時需要用到，不應該被刪除掉，這個時候我們就可以使用`git rm --cached`來幫我們刪除檔案。接下來我們就用範例來說明吧，我們先建一個檔案`tmp.txt`，然後把這個檔案提交到儲存庫裡。
+```bash
+$ touch tmp.txt
+$ git add tmp.txt
+$ git commit -m "Add tmp.txt"
+[master 4913011] Add tmp.txt
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 tmp.txt
+```
+現在我們來刪除檔案吧，然後查看專案的狀態：
+```bash
+$ git rm --cached
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        deleted:    tmp.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        tmp.txt
+```
+Git告訴我們`tmp.txt`已經刪除了，可是還有一個檔案`tmp.txt`不是追蹤狀態。我們可以從檔案總管查看`tmp.txt`是不是還存在，我們也可以使用Bash提供的指令來查看：
+```bash
+$ ls -l
+-rw-r--r-- 1 JH-06 197121 28 Feb 17 10:54 Readme.md
+-rw-r--r-- 1 JH-06 197121 19 Feb 17 13:51 test.txt
+-rw-r--r-- 1 JH-06 197121  0 Feb 17 16:14 tmp.txt
+```
+檔案`tmp.txt`因`git rm`使用參數`--cached`而沒真的刪除掉，只是從儲存庫中被移除掉，所以Bash的指令`ls`和檔案總管都還看得到。現在，我們還是把`tmp.txt`加回去吧。
+```bash
+$ git add tmp.txt
+$ git status
+On branch master
+nothing to commit, working tree clean
+```
+
+#### 重新命名和搬移
+檔案的重新命名也是一種變更，這邊也有三個方法可以更改檔名，第一個方法就跟刪除檔案一樣，直接在檔案總管上處理，第二個方法就是使用Bash指令的`mv`來改檔名。我們用`mv`來更改`test.txt`的檔名：
+```bash
+$ mv 原始檔名 新檔名或路徑
+# 原始檔名      : 想要重新命名或搬移的檔名
+# 新檔名或路徑  : 若是一個在當前目錄下不存在的檔名，則對原始檔案更改名稱，
+#                 假如是一個路徑，則會把原始檔案搬過去，相當於在檔案總管中把檔案剪掉並貼到新的目錄中
+
+$ mv test.txt bird.txt
+```
+我們來看一下當前的狀態是如何：
+```bash
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        deleted:    test.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        bird.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+```
+我們從上面的訊息中可以得知，當我們更改檔名時，對Git來說這相當於兩個動作，第一個是刪除檔案`test.txt`，然後建立一個新檔案`bird.txt`。
+
+至於檔案的重新命名的第三個方法，就跟刪除檔案一樣，Git也提供指令來達成這件事，而且這個指令相當於`mv`與`git add .`的結合。也就是說，使用Git提供的指令來更改檔名，我們可以少使用一個指令。這個指令的用法如下：
+```bash
+$ git mv [-f] 原始檔案 新檔名或路徑
+# -f  : 有強制的意思，會無視不能改名的情況
+```
+就跟`git rm`類似，在某些情況下我們沒辦法更改檔名，這個時候就可以使用參數`-f`來強制改名。
+
+這邊再提一點，不論是`mv`或是`git mv`除了可以用來更改檔名以外，只要在原始檔名後面接的不是檔名，而是一個路徑，則該檔案就會搬移到所指定的路徑。我們先建一個目錄`tmp`，然後試著使用`git mv`把檔案`tmp.txt`搬到目錄`tmp`中吧。
+```bash
+$ mkdir tmp
+
+$ git mv tmp.txt tmp
+
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        renamed:    tmp.txt -> tmp/tmp.txt
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        deleted:    test.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        bird.txt
+```
+我們使用`git status`查看狀態，可以得知兩件事，第一件事是我們先前把`test.txt`改名為`bird.txt`，第二件事是`tmp.txt`改名為`tmp/tmp.txt`。對Git來說搬移檔案也算是重新命名，可以這樣思考，原本檔名`tmp.txt`改成`tmp/tmp.txt`，只是對我們來說這個動作是把檔案搬到目錄`tmp`中。
+
+最後，我們把這兩個動作都提交到儲存庫中吧：
+```bash
+$ git add .
+
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        renamed:    test.txt -> bird.txt
+        renamed:    tmp.txt -> tmp/tmp.txt
+
+
+$ git commit -m "Rename test.txt -> bird.txt and Move tmp.txt into directory tmp"
+[master cf04238] Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+ rename test.txt => bird.txt (100%)
+ rename tmp.txt => tmp/tmp.txt (100%)
+```
+在我們使用`git add .`之前，使用`git status`可以看到本來`test.txt`回報說被刪除並建立新的檔案`bird.txt`，可是使用了`git add .`則回報說`test.txt`重新命名為`bird.txt`。
