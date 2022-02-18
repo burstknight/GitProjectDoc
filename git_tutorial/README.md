@@ -429,3 +429,148 @@ $ git commit -m "Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
  rename tmp.txt => tmp/tmp.txt (100%)
 ```
 在我們使用`git add .`之前，使用`git status`可以看到本來`test.txt`回報說被刪除並建立新的檔案`bird.txt`，可是使用了`git add .`則回報說`test.txt`重新命名為`bird.txt`。
+
+### 讓Git忽略檔案: `.gitignore`
+在開發專案時，有時候我們把某些檔案放進儲存庫中讓Git管控，事後想想這些檔案不應該給Git管控。那些檔案可能含有像是帳密這類機密資訊，也可能那些檔案是程式碼需要用到的設定檔而導致更改的頻率很高，又或是建置專案與程式碼產生的臨時檔案。
+
+Git也有辦法忽略掉我們不想管控的檔案，方法是建立檔案`.gitignore`，在這個檔案中制訂規則來忽略掉我們不想讓Git管控的檔案，然後使用`git add`指令把該檔案加到儲存庫中。我們先建立檔案`config.cfg`，然後查看狀態：
+```bash
+$ touch config.cfg
+
+$ git status
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        config.cfg
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+因為我們還沒建立`.gitignore`，所以Git查覺到有檔案建立出來。現在我們先建立檔案`.gitignore`：
+```bash
+$ touch .gitignore
+```
+接下來我們在`.gitignore`中加入一條規則來忽略掉`config.cfg`，請在`.gitignore`中填入下面的內容：
+```
+config.cfg
+```
+現在我們來看看Git是否能夠察覺`config.cfg`，並要求我們要提交到儲存庫：
+```bash
+$ git status
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        .gitignore
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+看到了吧，當我們把`config.cfg`寫進`.gitignore`中，Git就會忽略掉`config.cfg`，可是`.gitignore`是新建的檔案，所以Git會要求我們提交到儲存庫中。
+
+我們再來思考一個情況，假設我們要開發一套遊戲程式，這套遊戲程式需要使用`config.cfg`來維護程式某些設定，而且考慮到`config.cfg`有可能會一時失誤亂設定，這個時候我們需要準備`default.cfg`來當作用來初始化的設定檔，讓程式的設定恢復最初的狀態。也許未來還要根據不同的情境準備多個不同的設定檔，說不定會有10多個設定檔，難道我們要一一列舉出來才能讓Git忽略掉嗎?其實可以不必這麼做，雖然這些設定檔的檔名都不同，但我們知道這些設定檔都有一個共通點，那就是副檔名都是`.cfg`。這個時候我們可以搭配萬用字元`*`和附檔名`.cfg`來組成一個忽略規則，來讓Git忽略掉附檔名為`.cfg`的所有檔案，現在我們把`.gitignore`的內容改成下面：
+```
+*.cfg
+```
+接著，我們測試看看Git能不能忽略掉`config.cfg`，然後再測試看看我們再建立一個檔案`default.cfg`，看看Git能不能忽略掉`default.cfg`：
+```bash
+$ git status
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        .gitignore
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+$ touch default.cfg
+
+$ git status
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        .gitignore
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+我們修改了`.gitignore`的內容，Git還是照樣能夠忽略掉`config.cfg`，而且因為我們使用萬用字元`*`，所以`default.cfg`也會被忽略掉。
+
+現在我們來試試看忽略掉目錄`tmp`中的`tmp.txt`，我們在`.gitignore`中再加入一行：
+```
+tmp/tmp.txt
+```
+然後我們在`tmp/tmp.txt`中輸入下面的內容：
+```
+This is tmp file.
+```
+接下來查看專案的狀態：
+```bash
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   tmp/tmp.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        .gitignore
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+`git status`回報說`.gitignore`是未追蹤的狀態，這個很正常，因為我們還沒提交到儲存庫中，可是奇怪的是Git卻說`tmp/tmp.txt`已經修改了。我們已經修改`.gitignore`來忽略掉`tmp/tmp.txt`，為什麼我們修改了這個應該要被忽略的檔案，Git卻還會持續追蹤這個檔案的狀態呢？
+
+會有這個狀況是因為在我們把`tmp/tmp.txt`忽略掉的這條規則加到`.gitignore`中之前，就已經提交到儲存庫中。也就是說，Git只會在`.gitginore`加入忽略條件之後，才會這條忽略條件生效。如果在`.gitignore`加入忽略條件之前，就已經把需要忽略的檔案提交到儲存庫，那麼這些檔案就不會被忽略掉。在這種情況下，我們需要先編輯好`.gitignore`，然後使用`git rm --cached`來把應該要被忽略掉的檔案從儲存庫中移出，我們來試試看移除`tmp/tmp.txt`：
+```
+$ git rm --cached tmp/tmp.txt
+
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        deleted:    tmp/tmp.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        .gitignore
+```
+可以看到使用`git rm --cached `幫我們把`tmp/tmp.txt`從儲存庫中移除。我們來把`.gitignore`提交到儲存庫中，請確認`.gitignore`的完整內容跟下面的一樣：
+```
+*.cfg
+tmp/tmp.txt
+```
+然後我們把`.gitignore`提交到儲存庫中：
+```bash
+$ git add .
+
+$ git commit -m "Add .gitignore"
+[master 7f707c6] Add .gitignore
+ 2 files changed, 2 insertions(+)
+ create mode 100644 .gitignore
+ delete mode 100644 tmp/tmp.txt
+```
+在做完上面的動作以後，不管我們怎麼修改`tmp/tmp.txt`的內容，Git也不會理會。假如不想保留任何要被Git忽略的檔案，也可以直接使用下面的指令：
+```bash
+$ git clean -fX
+# -f  : 強制的意思
+# -X  : 會依據.gitignore的規則來忽略掉的規則來刪除掉所有在專案中的檔案
+```
+使用上面的指令會根據`.gitignroe`的規則，可以一勞永逸的刪除掉所有要被忽略掉的檔案。這邊提醒一下，請確定真的要刪除掉所有需要忽略掉的檔案，否則等指令執行完了，可能就沒辦法救回那些被刪掉的檔案。
+
+還需要提一點，只要被忽略的檔案曾經被提交到儲存庫中，即使編輯`.gitignore`並使用`git rm --cached`將其移出儲存庫，雖然Git不會再追蹤其狀態，但是在儲存庫中還是存在這些檔案。如果這些檔案非常大，目錄`.git`就會比較肥，後面會有一個小節會說明如何處理這個問題。
+
+最後，我們統整一下編輯`.gitignore`忽略規則的幾個注意事項：
+- 以一行為一個單位來制定一條規則，來忽略掉單一或多個檔案
+- 若以檔名來當作一條忽略規則，Git只會忽略掉這個檔名
+- 萬用字元`*`可以代表0到任意多個字元，可以搭配路徑和副檔名來忽略掉特定規則的檔案
+- `#`是單行註解的符號，只要有這個符號，該符號後面的文字都會被Git忽略掉
+- 只對新增規則以後的檔案才會被忽略
+- 若在新增忽略規則之前就已經把檔案提交到儲存庫中，就需要事後使用`git rm --cached`或`git clean -fX`來把需要忽略的檔案移除掉
+  
+我們就拿下面的`.gitignore`的內容為例，來說明上面的注意事項：
+```
+# 忽略掉所有副檔名為.cfg的檔案
+*.cfg
+
+# 忽略掉目錄tmp的tmp.txt
+tmp/tmp.txt
+```
+這邊列舉出上面範例的幾個重點：
+- 第一行和第四行是註解，說明下一行的忽略條件的用途
+- 第二行中因為萬用字元`*`可以代表任意的檔名，也可以包含某些目錄，所以只要副檔名為`.cfg`的檔案都會被忽略掉，就算這些檔案存在於專案目錄下的任何一個子目錄都會被忽略
+- 最後一行只針對目錄`tmp`底下的`tmp.txt`制定忽略規則，也就是說這條規則只忽略掉這個特定的檔案
