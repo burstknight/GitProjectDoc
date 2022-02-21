@@ -14,29 +14,29 @@ Git在版本管控上不僅執行很快，而且有些版本管控的程式還�
 
 請開啟終端機，並且輸入下面兩行指令：
 ```bash
-git config --global user.name "Joe"
-git config --global user.email "joe@test.tw"
+$ git config --global user.name "Joe"
+$ git config --global user.email "joe@test.tw"
 ```
-輸入完成後，就可以設定目前使用的電腦在Git管理專案的使用者名稱和Email，而且這個設定可用在該電腦上所有Git管理的專案。
+輸入完成後，就可以設定目前使用的電腦在Git管理專案的使用者名稱和Email，而且這個設定可用在該電腦上所有Git管理的專案。這裡提醒一下，那個字元`$`只是Bash終端機的提示字元，實際上下指令時，是要輸入字元`$`後面的那串文字才對。
 
 如果只想針對一個Git管理的專案設定特定的使用者名稱和Email，可以使用下面的指令：
 ```bash
-git config --local user.name "Joe"
-git config --local user.email "joe@email.tw"
+$ git config --local user.name "Joe"
+$ git config --local user.email "joe@email.tw"
 ```
 重點是`git config`後面接的參數`--global`，只要有這個參數，就可以修改全域的參數。在`git config`後面接`--local`就可以只針對當前的專案調整設定。
 
 ### 更換編輯器
 使用Git管理專案時會需要使用編輯器，Git也允許使用者更換編輯器，以下面指令範例是把編輯器更換成Vim：
 ```bash
-git config --global core.editor vim
+$ git config --global core.editor vim
 ```
 Git預設使用的編輯器是Vim，如果有需要也可使用GUI的編輯器，像是Notepad++。不過，本文採用的編輯器會是Vim。
 
 ### 顯示當前專案更動的設定
 修改完專案的設定，可以使用下面的指令來查看設定值：
 ```bash
-git config --list
+$ git config --list
 ```
 
 ## 建立專案給Git管理
@@ -46,12 +46,12 @@ mkdir testGit
 ```
 建立好之後就切換進`testGit`中，我們也可以在終端機中輸入指令來切換當前的目錄：
 ```bash
-cd testGit
+$ cd testGit
 ```
 
 建立好專案並且進到專案資料夾後，我們需要使用下面的指令來初始化專案：
 ```bash
-git init
+$ git init
 ```
 使用上面的指令後，應該會發現專案的資料夾中會出現`.git`的目錄，這個目錄就是Git能對專案進行版本管控的關鍵。我們使用Git對專案版本管控時，就是把專案中每次改動都記錄到`.git`中。也就是說，**只要把`.git`目錄刪掉，Git就沒辦法再對該專案進行版本管控。**
 
@@ -73,7 +73,7 @@ Git在對檔案進行版本管控時，就如同把檔案在三個不同的區�
 ### 確認檔案狀態:`git status`
 Git管理專案中每個檔案時，我們都會使用如記事本之類的編輯器編輯程式碼，等確定編輯好了，就會讓Git幫我們儲存編輯好的檔案。我們可以使用下面的指令來確認當前專案下有沒有檔案更動過：
 ```bash
-git status
+$ git status
 ```
 如果照著本文下指令的話，目錄`testGit`中除了隱藏目錄`.git`以外，沒有其他檔案和資料夾，使用上面的`git status`會回報說沒有檔案更動過：
 ```bash
@@ -103,18 +103,46 @@ Untracked files:
 nothing added to commit but untracked files present (use "git add" to track)
 
 ```
-上面的訊息中最重要的是`Untracked files`，在這行下面會列出檔名`Readme.md`，這是要告訴我們到目前為止Git都還沒管理檔案`Readme.md`，而且該檔案還是新建立的。
+上面的訊息中最重要的是`Untracked files`，在這行下面會列出檔名`Readme.md`，這是要告訴我們到目前為止檔案`Readme.md`是**未追蹤**中的，它要求我們使用`git add`和`git commit`把該檔案放進儲存庫中，讓Git可以持續追蹤該檔案的狀態。
+
+我們再做一個實驗，先建立一個空的目錄，然後查看狀態：
+```
+$ mkdir test
+
+$ git status
+On branch master
+nothing to commit, working tree clean
+
+```
+回報的訊息說沒任何東西需要搬移到暫存區，我們已經建立新的目錄，為什麼Git卻沒要求我們把目錄`test`放進儲存庫呢？這是因為Git只在意檔案內容的變動，而不會管目錄底下的變化，所以我們建立目錄`test`時，Git才會沒察覺該目錄的存在。
+
+現在我們試試看，在目錄`test`中建一個空檔案，然後查看狀態：
+```bash
+$ touch test/.file
+
+$ git status
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        test/
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+在我們建立空檔案`.file`之後，Git就查覺到目錄`test`的存在。假如我們想把目錄放到儲存庫中，讓Git可以管控，我們可以先建一個空檔案，然後使用`git add `和`git commit`來放進儲存庫中。現在我們還是先把目錄`test`刪除掉：
+```bash
+$ rm -rf test
+```
 
 ### 讓Git管理檔案的版本:`git add`
 我們在前一小節中建立了檔案`Readme.md`，也使用`git status`確認過，`Readme.md`還沒讓Git幫我們管理。那麼我們該如何讓Git管理新檔案呢?
 
 我們可以需要先使用`git add`把檔案放進暫存區中，該指令用法如下：
 ```bash
-git add <filepath>
+$ git add <filepath>
 ```
 `filepath`是我們想讓Git管理的檔案路徑，現在我們只有一個檔案`Readme.md`需要讓Git管理，我們可使用下面的指令：
 ```bash
-git add Readme.md
+$ git add Readme.md
 ```
 使用上面的指令後，我們使用`git status`來確認看看當前專案的狀態：
 ```bash
@@ -131,7 +159,7 @@ Changes to be committed:
 
 假如我們修改了多個檔案，或是新增多個檔案時，比方說有十個檔案，難道我們就要連續使用`git add`十次嗎?其實可以不必這麼麻煩，我們可以使用下面的指令，git會幫我們找出所有新建的檔案，以及已經修改過的檔案，然後把這些檔案放進暫存區中：
 ```bash
-git add .
+$ git add .
 ```
 上面指令中最關鍵的是`.`，在Bash中`.`代表當前目錄的意思，我們把它當作`<filepath>`給`git add`使用，就能一次把所有修改過和新增過的檔案放進暫存區中。
 
@@ -151,7 +179,7 @@ $ git commit -m "Init commit"
  1 file changed, 2 insertions(+)
  create mode 100644 Readme.md
 ```
-這邊提醒一下，那個`$`不是真的要輸入的指令，那只是終端機的提示字元，實際上輸入指令時，是要輸入`$`後面那串指令。在輸入完畢，Git就會把`Readme.md`和訊息`Init commit`一併放進儲存庫中。
+在輸入完畢，Git就會把`Readme.md`和訊息`Init commit`一併放進儲存庫中。
 
 如果要提交的訊息非常長，可以只使用`git commit`，此時就會跳出編輯器，只要在編輯器中輸入完訊息並且儲存，然後關閉編輯器，Git就會提交這次的訊息。至於Git會跳出什麼樣的編輯器，則依據Git的設定而定，預設使用vim，當然也可以更換編輯器，更換方式請參考[更換編輯器](#更換編輯器)。
 
