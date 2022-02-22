@@ -602,3 +602,170 @@ tmp/tmp.txt
 - 第一行和第四行是註解，說明下一行的忽略條件的用途
 - 第二行中因為萬用字元`*`可以代表任意的檔名，也可以包含某些目錄，所以只要副檔名為`.cfg`的檔案都會被忽略掉，就算這些檔案存在於專案目錄下的任何一個子目錄都會被忽略
 - 最後一行只針對目錄`tmp`底下的`tmp.txt`制定忽略規則，也就是說這條規則只忽略掉這個特定的檔案
+
+## 分支(Branch)
+在本章節中將會介紹什麼是分支(Branch)，以及如何使用分支來管控專案。
+
+### 何謂分支?
+在科幻電影裡，主角會使用時光機器進行時光旅行，來到某個重要的分歧點。在這個重要的分歧點，主角的父母因沒買到彩券並中獎，而讓他們一家人過得非常困苦。主角第一次來到這個重要的分歧點，他誘使他的父母購買彩券，但是卻被壞人盯上，結果獎金被壞人搶走。這個時候產生了一個新的時間線，在這個時間線中雖然主角的父母中大獎，卻因獎金被搶走而過得很慘。主角第二次來到重要分歧點，而這次他不僅又使父母買彩券並中獎，還設法阻止壞人搶走獎金。這次又產生了一個時間線，在這個時間線中主角和父母用這筆獎金過得幸福美滿。
+
+分支就類似於上面例子提到的時間線，雖然我們沒有時光機器，但是我們可以使用Git來幫我們管理專案時，在重要的分歧點上建立一個新的分支，甚至還可以建立多個分支，然後做我們想要達成的事情。那麼，分支在什麼情況下可以派上用場呢?
+
+比方說我們在開發一個遊戲程式，在這遊戲中使用了我們自己設計的數學公式來模擬重力，但是因為當初沒設計好，導致計算過程比較耗時。也許我們經過分析後，發現只要修改數學公式，並且使用新的實作方式就可以讓計算過程更快，而且模擬重力的結果跟修改之前的一樣，但是我們不確定這麼做是否可行。這個時候我們就可以建立一個新的分支，在這個新的分支上嘗試實作新的方法。只要測試結果是對的，就保留這個新的分支，並且與原有的程式碼整合起來，就算失敗了，也不會影響到原有的程式碼。
+
+### 建立與切換分支: `git branch`, `git checkout`
+當我們想建立一個新的分支時，可以使用`git branch`，用法如下：
+```bash
+$ git branch <new_branch>
+# <new_branch>  : 新分支的名稱
+
+$ git branch
+# 用於顯示所有的分支
+```
+使用`git branch`建立分支時，只要在該指令後面輸入分支的名稱即可。基本上分支名稱沒有什麼限制，唯一的限制是不能包含空格。`git branch`主要的用途是管理分支，除了剛剛提到可以建立新分支以外，還可以只使用`git branch`會顯示專案中所有的分支。當然，`git branch`也能夠修改現有分支的名稱，甚至可以刪除已經存在的分支：
+```bash
+$ git branch -m <old_branch> <new_branch>
+# -m            : 用於修改分支的名稱
+# <old_branch>  : 已經存在分支的名稱
+# <new_branch>  : 新的分支名稱
+
+$ git branch [-d|-D] <branch>
+# -d        : 用於刪除已經存在的分支
+# -D        : 類似-d，但是會強制刪除
+# <branch>  : 欲刪除的分支名稱
+```
+這裡提一下，`|`代表兩個參數中只能選一個來使用。使用`git branch -m`修改分支名稱時，後面接的`<old_branch>`必須是已經存在的分支，而`<new_branch>`則必須是不存在的分支名稱才行。在刪除分支時，所使用的分支當然也必須是已經存在的。而`git branch -d`和`git branch -D`之間的差別在於，後者會無視任何情況，直接刪除掉分支，而前者在遇到一些狀況時會中只刪除的動作。
+
+當我們建立好分支後，就應該要切換到新的分支中，去完成這個新分支的工作。我們可以使用`git checkout`來切換分支，用法如下：
+```bash
+$ git checkout [-b] <branch_name>
+# -b            : 當切換的分支不存在時，會建立新的分支
+# <branch_name> : 欲切換過去的分支名稱
+```
+當我們直接使用`git checkout`時可以切換到已經存在的分支，切換過去時。這裡要提一下，當我們使用`git checkout -b`時，只要後面接的分支名稱不存在，Git就會幫我們先建立好，然後切換過去，就相當於先執行`git branch`建立新分支後，執行`git checkout`切換分支。
+
+在大致說明用法以後，接下來用範例來體會一下這些指令的功能吧。我們先建立新的分支，然後切換過去，然後新增檔案並提交到儲存庫中：
+```bash
+$ git branch test
+
+$ git checkout test
+Switched to branch 'test'
+
+$ touch test.txt
+
+$ git add .
+
+$ git commit -m "Add test.txt"
+[test 8d0a25f] Add test.txt
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 test.txt
+
+$ ls -l
+total 2
+-rw-r--r-- 1 JH-06 197121 28 Feb 17 10:54 Readme.md
+-rw-r--r-- 1 JH-06 197121 19 Feb 17 13:51 bird.txt
+-rw-r--r-- 1 JH-06 197121  0 Feb 17 18:02 config.cfg
+-rw-r--r-- 1 JH-06 197121  0 Feb 18 09:58 default.cfg
+-rw-r--r-- 1 JH-06 197121  0 Feb 21 17:04 test.txt
+drwxr-xr-x 1 JH-06 197121  0 Feb 18 11:03 tmp/
+```
+在做完上面的指令以後，這邊我們使用`ls -l`可以發現`testGit`目錄底下多了一個我們剛剛建立的新檔案`test.txt`。我們使用`git log`來確認看看提交的歷史紀錄：
+```bash
+$ git log
+commit 8d0a25fc3a80cf1bea78003c7df1697dc4ea3855 (HEAD -> test)
+Author: Joe <joe@email.tw>
+Date:   Mon Feb 21 17:04:12 2022 +0800
+
+    Add test.txt
+
+commit 7f707c650e3b3c9cafeebbc63f309a04057e542d (master)
+Author: Joe <joe@email.tw>
+Date:   Fri Feb 18 10:43:01 2022 +0800
+
+    Add .gitignore
+
+commit cf04238a79903b480935682237eedabd465d15e7
+Author: Joe <joe@email.tw>
+Date:   Thu Feb 17 17:32:12 2022 +0800
+
+    Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+
+commit 4913011d31e613f0fe0a041c3df7bd813cc2c95b
+Author: Joe <joe@email.tw>
+Date:   Thu Feb 17 16:14:46 2022 +0800
+
+    Add tmp.txt
+:
+```
+可以發現最上面的就是我們剛剛提交的訊息。這邊留意一下，在最上面的訊息的最右邊有個`(HEAD) -> test`代表我們現在處於`test`分支，關於`HEAD`後面會再詳細說明。我們切回分支`master`，並且看看目錄`testGit`會有什麼樣的變化：
+```bash
+$ git checkout master
+Switched to branch 'master'
+
+$ ls -l
+total 2
+-rw-r--r-- 1 JH-06 197121 28 Feb 17 10:54 Readme.md
+-rw-r--r-- 1 JH-06 197121 19 Feb 17 13:51 bird.txt
+-rw-r--r-- 1 JH-06 197121  0 Feb 17 18:02 config.cfg
+-rw-r--r-- 1 JH-06 197121  0 Feb 18 09:58 default.cfg
+drwxr-xr-x 1 JH-06 197121  0 Feb 18 11:03 tmp/
+```
+我們切回分支`master`以後，剛剛我們建立的檔案`test.txt`居然不見了，這是怎麼回事？`git checkout`運作機制是這樣的，當我們使用`git checkout master`時，Git會從目錄`.git`中把對應於分支`master`的狀態取出來，然後將該狀態的所有檔案取代掉目錄`testGit`。也就是說剛剛我們建立的檔案`test.txt`也不是真的被刪除掉，它還存在於目錄`.git`中。
+
+現在我們在分支`test`上再建立一個新的分支，然後再切換過去，並且建立檔案並提交到儲存庫中：
+```bash
+$ git checkout test
+Switched to branch 'test'
+
+$ git branch dog
+
+$ git checkout dog
+Switched to branch 'dog'
+
+$ touch dog.txt
+
+$ git add .
+
+$ git commit -m "Add dog.txt"
+[dog 0c62b45] Add dog.txt
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 dog.txt
+
+$ ls -l
+-rw-r--r-- 1 JH-06 197121 28 Feb 17 10:54 Readme.md
+-rw-r--r-- 1 JH-06 197121 19 Feb 17 13:51 bird.txt
+-rw-r--r-- 1 JH-06 197121  0 Feb 17 18:02 config.cfg
+-rw-r--r-- 1 JH-06 197121  0 Feb 18 09:58 default.cfg
+-rw-r--r-- 1 JH-06 197121  0 Feb 21 17:26 dog.txt
+-rw-r--r-- 1 JH-06 197121  0 Feb 21 17:24 test.txt
+drwxr-xr-x 1 JH-06 197121  0 Feb 18 11:03 tmp/
+
+```
+當我們使用完上面的指令，目錄`testGit`會多一個新的檔案，也就是我們剛剛建立的`dog.txt`。這裡要注意一下，當我們建立新的分支時，Git會從當前的分支中建出一個副本，它會包含該當前分支所有的狀態。以上面為例，我們先在分支`master`建立分支，所以分支`test`中會包含分支`master`所有的檔案，以及最新的修改內容。接著，我們又在分支`test`上再建立一個新分支`dog`，分支`dog`也擁有分支`test`的所有檔案，這其中也包含`test.txt`。
+
+現在我們切回分支`master`，然後試試看能不能刪除分支`dog`：
+```bash
+$ git checkout master
+Switched to branch 'master'
+
+$ git branch
+  dog
+* master
+  test
+
+$ git branch -d dog
+error: The branch 'dog' is not fully merged.
+If you are sure you want to delete it, run 'git branch -D dog'.
+
+```
+我們切回分支`master`以後，使用`git branch`查看所有的分支情況，其中分支`master`左邊的`*`代表當前所在的分支是`master`。我們使用`git branch -d`居然不能刪除掉分支`dog`，這是為什麼呢？我們來分析Git回報的錯誤訊息，原來Git不允許刪除分支`dog`的原因是，分支`dog`已經提交過訊息，可是還沒合併回現有的分支。假如我們真的想刪除分支`dog`，也不是不行，可以這樣做：
+```bash
+$ git branch -D dog
+Deleted branch dog (was 0c62b45).
+
+$ git branch
+* master
+  test
+
+```
+看到了吧，使用`git branch -D`可以強制刪掉分支`dog`，然後使用`git branch`也可以發現分支`dog`是真的刪除掉了。刪除掉分支`dog`以後顯示的訊息，意思是分支`dog`確實已經刪除掉了，但是考慮到我們可能會想反悔，所以實際上還會暫時保留一個編號`0c62b45`，日後方便我們可以救回已經被刪掉的分支。不過，也不是所有被刪除的分支都救得回來，必須滿足一些條件才行，這個後面會再提。
