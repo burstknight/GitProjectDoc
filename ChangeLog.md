@@ -18,6 +18,7 @@ This document is to log all changes for this project.
 - Update `git_tutorial/README.md` to modify context.
 - Update `git_tutorial/README.md` to show how to manage branch.
 - Update `git_tutorial/README.md` to introduct SHA-1.
+- Update `git_tutorial/README.md` to show how to merge branch.
 
 ### Changed
 

@@ -776,6 +776,263 @@ $ git branch
 
 我們剛剛談到SHA-1這類雜湊函數有一個特性，那就是**理論上**只要輸入的資料不同，就能得到具有**不會重複的**輸出結果。這邊強調了「理論上」，也就是說雖然雜湊函數具有剛剛提到的特性，但是也有可能會發生輸入的資料不同，卻會得到相同的輸出結果，這種情況稱之為碰撞(Collison)。
 
-如果雜湊函數沒設計好，的確有可能經常發生碰撞。Google和CWI Amsterdam合作確實能夠做出兩個相同的SHA-1值，但是內容卻不同的PDFG檔。然而，我們也不需要擔心，因為Google擁有龐大的資源，才能做出這種內容不同的PDF檔卻有相同的SHA-1值，一般的情況下使用SHA-1是不太會遇到碰撞。
+如果雜湊函數沒設計好，的確有可能經常發生碰撞。Google和CWI Amsterdam合作確實能夠做出兩個相同的SHA-1值，但是內容卻不同的PDF檔。然而，我們也不需要擔心，因為Google擁有龐大的資源，才能做出這種內容不同的PDF檔卻有相同的SHA-1值，一般的情況下使用SHA-1是不太會遇到碰撞。
 
-那麼Git如何使用SHA-1呢？對Git來說一切皆為物件，在處理檔案或是提交變更訊息到儲存庫，這一切都會使用SHA-1來處理，然後儲存在目錄`.git`中，下一小節會更詳細說明。
+那麼Git如何使用SHA-1呢？對Git來說一切皆為物件，在處理檔案或是提交變更訊息到儲存庫，這一切都會使用SHA-1來處理，然後儲存在目錄`.git`中，後面會更詳細說明。
+
+### 合併分支: `git merge`
+接下來我們用[何謂分支?](#何謂分支)中開發遊戲的範例來說明為何需要合併分支。假設原本使用效率很差的重力模擬公式的分支為`master`，現在我們建立一個新的分支`test_new-method`來實作新的重力模擬的數學公式，我們不只實作出來，而且還能證明新的方法確實比舊的更有效率。這個時候我們就應該把分支`test_new-method`上做的所有修改都整合到分支`master`上，這個動作就是合併分支。
+
+我們來談談`git merge`這個指令，這是合併分支常用的指令，用法如下：
+```bash
+$ git merge [--no-ff] <branch-name>
+# --no-ff :  不使用快速模式來合併分支
+```
+一般使用`git merge`時會搭配`git checkout`使用，因為這個指令是把別的分支合併到當前的分支。如果有照著本文的範例做的話，`testGit`會有兩個分支`master`和`test`，現在我們先切換到`master`，然後使用看看`git merge`：
+```bash
+$ git checkout master
+Switched to branch 'master'
+
+$ git merge test
+Updating 7f707c6..8d0a25f
+Fast-forward
+ test.txt | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 test.txt
+
+$ git log --graph
+* commit 8d0a25fc3a80cf1bea78003c7df1697dc4ea3855 (HEAD -> master, test)
+| Author: Joe <joe@email.tw>
+| Date:   Mon Feb 21 17:04:12 2022 +0800
+|
+|     Add test.txt
+|
+* commit 7f707c650e3b3c9cafeebbc63f309a04057e542d
+| Author: Joe <joe@email.tw>
+| Date:   Fri Feb 18 10:43:01 2022 +0800
+|
+|     Add .gitignore
+|
+* commit cf04238a79903b480935682237eedabd465d15e7
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 17:32:12 2022 +0800
+|
+|     Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+|
+* commit 4913011d31e613f0fe0a041c3df7bd813cc2c95b
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 16:14:46 2022 +0800
+|
+|     Add tmp.txt
+|
+* commit 395bee40b5c1c9a159e178779ccbbc8ebf78a7ff
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 16:09:00 2022 +0800
+|
+|     Delete cat.txt
+|
+* commit a8b412ecc331c7df85df9c1f6cec2e6a9d092283
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 13:51:59 2022 +0800
+|
+|     Update test.txt
+|
+|     I update test.txt.
+|
+* commit b9cd7079788b33a7e4191c990a276c59b668e87d
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 11:58:31 2022 +0800
+|
+|     Add cat.txt
+|
+* commit 9eee82b4d028aa45f30913421708efd801938062
+  Author: Joe <joe@email.tw>
+  Date:   Thu Feb 17 10:55:07 2022 +0800
+
+      Init commit
+
+$ ls -l
+total 2
+-rw-r--r-- 1 JH-06 197121 28 Feb 17 10:54 Readme.md
+-rw-r--r-- 1 JH-06 197121 19 Feb 17 13:51 bird.txt
+-rw-r--r-- 1 JH-06 197121  0 Feb 17 18:02 config.cfg
+-rw-r--r-- 1 JH-06 197121  0 Feb 18 09:58 default.cfg
+-rw-r--r-- 1 JH-06 197121  0 Mar  3 15:13 test.txt
+drwxr-xr-x 1 JH-06 197121  0 Feb 18 11:03 tmp/
+```
+當我們合併完，分支`master`就會包含分支`test`中所有的東西。如果我們使用`ls -l`指令查看，就會發現原本分支`master`中不存在檔案`test.txt`，可是在合併分支以後，就多了這個檔案。
+
+也許你會想問，在分支`master`使用`git merge`來合併分支`test`，和在分支`test`使用`git merge`來合併分支`master`，有什麼差別？如果以結果來看，可以說沒什麼差別，因為分支`master`已經擁有分支`test`的所有檔案和修改狀態，而分支`test`也已經擁有分支`master`所有的檔案和修改狀態。不過，實際上還是不太一樣，在分支`master`使用`git merge`來合併，可以想像成分支`master`是一條主幹河流，而分支`test`則是一條支流小溪，進行合併時其實是支流的`test`流向主幹的`master`。
+
+現在我們來談談那個參數`--no-ff`到底是什麼。如果只使用`git merge`會以快速模式(Fast-forward)來合併，假如使用`--no-ff`就會以非快速模式來合併。現在我們用範例來說明，首先我們切換分支到`test`，然後提交兩次訊息：
+```bash
+$ git check test
+Switched to branch 'test'
+
+$ echo "new file!" > new.txt
+
+$ git add .
+
+$ git commit -m "Add new.txt"
+[test e878e12] Add new.txt
+ 1 file changed, 1 insertion(+)
+ create mode 100644 new.txt
+
+$ touch color.txt
+
+$ git add .
+
+$ git commit -m "Add color.txt"
+[test 90bdb96] Add color.txt
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 color.txt
+
+$ git log --graph
+* commit 90bdb96a6e365605d127f985cc6ddec765a23845 (HEAD -> test)
+| Author: Joe <joe@email.tw>
+| Date:   Thu Mar 3 15:33:22 2022 +0800
+|
+|     Add color.txt
+|
+* commit e878e12d1b408d8df3e85464b4cd748e8fc1db4d
+| Author: Joe <joe@email.tw>
+| Date:   Thu Mar 3 15:31:50 2022 +0800
+|
+|     Add new.txt
+|
+* commit 8d0a25fc3a80cf1bea78003c7df1697dc4ea3855 (master)
+| Author: Joe <joe@email.tw>
+| Date:   Mon Feb 21 17:04:12 2022 +0800
+|
+|     Add test.txt
+|
+* commit 7f707c650e3b3c9cafeebbc63f309a04057e542d
+| Author: Joe <joe@email.tw>
+| Date:   Fri Feb 18 10:43:01 2022 +0800
+|
+|     Add .gitignore
+|
+* commit cf04238a79903b480935682237eedabd465d15e7
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 17:32:12 2022 +0800
+|
+|     Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+|
+* commit 4913011d31e613f0fe0a041c3df7bd813cc2c95b
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 16:14:46 2022 +0800
+|
+|     Add tmp.txt
+|
+* commit 395bee40b5c1c9a159e178779ccbbc8ebf78a7ff
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 16:09:00 2022 +0800
+|
+|     Delete cat.txt
+|
+* commit a8b412ecc331c7df85df9c1f6cec2e6a9d092283
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 13:51:59 2022 +0800
+|
+|     Update test.txt
+|
+|     I update test.txt.
+|
+* commit b9cd7079788b33a7e4191c990a276c59b668e87d
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 11:58:31 2022 +0800
+|
+|     Add cat.txt
+|
+* commit 9eee82b4d028aa45f30913421708efd801938062
+  Author: Joe <joe@email.tw>
+  Date:   Thu Feb 17 10:55:07 2022 +0800
+
+      Init commit
+(END)
+```
+現在我們使用非快速模式把分支`test`合併到分支`master`：
+```bash
+$ git checkout master
+Switched to branch 'master'
+
+$ git merge --no-ff test
+Merge made by the 'recursive' strategy.
+ color.txt | 0
+ new.txt   | 1 +
+ 2 files changed, 1 insertion(+)
+ create mode 100644 color.txt
+ create mode 100644 new.txt
+
+$ git log --graph
+*   commit 65e497e3b11e3bcc75aa9c8799c0df017cc754fa (HEAD -> master)
+|\  Merge: 8d0a25f 90bdb96
+| | Author: Joe <joe@email.tw>
+| | Date:   Thu Mar 3 15:35:58 2022 +0800
+| |
+| |     Merge branch 'test'
+| |
+| * commit 90bdb96a6e365605d127f985cc6ddec765a23845 (test)
+| | Author: Joe <joe@email.tw>
+| | Date:   Thu Mar 3 15:33:22 2022 +0800
+| |
+| |     Add color.txt
+| |
+| * commit e878e12d1b408d8df3e85464b4cd748e8fc1db4d
+|/  Author: Joe <joe@email.tw>
+|   Date:   Thu Mar 3 15:31:50 2022 +0800
+|
+|       Add new.txt
+|
+* commit 8d0a25fc3a80cf1bea78003c7df1697dc4ea3855
+| Author: Joe <joe@email.tw>
+| Date:   Mon Feb 21 17:04:12 2022 +0800
+|
+|     Add test.txt
+|
+* commit 7f707c650e3b3c9cafeebbc63f309a04057e542d
+| Author: Joe <joe@email.tw>
+| Date:   Fri Feb 18 10:43:01 2022 +0800
+|
+|     Add .gitignore
+|
+* commit cf04238a79903b480935682237eedabd465d15e7
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 17:32:12 2022 +0800
+|
+|     Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+|
+* commit 4913011d31e613f0fe0a041c3df7bd813cc2c95b
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 16:14:46 2022 +0800
+|
+|     Add tmp.txt
+|
+* commit 395bee40b5c1c9a159e178779ccbbc8ebf78a7ff
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 16:09:00 2022 +0800
+|
+|     Delete cat.txt
+|
+* commit a8b412ecc331c7df85df9c1f6cec2e6a9d092283
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 13:51:59 2022 +0800
+|
+|     Update test.txt
+|
+|     I update test.txt.
+|
+* commit b9cd7079788b33a7e4191c990a276c59b668e87d
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 11:58:31 2022 +0800
+|
+|     Add cat.txt
+|
+* commit 9eee82b4d028aa45f30913421708efd801938062
+  Author: Joe <joe@email.tw>
+  Date:   Thu Feb 17 10:55:07 2022 +0800
+
+      Init commit
+(END)
+```
+當我們合併完，使用`git log --graph`查看會發現分支線多了一個空洞，這個不使用參數`--no-ff`是完全不同的。從這個範例中我們可以知道使用`git merge`合併時兩條分支會整合成一條，但是使用`git merge --no-ff`則會同時保留這兩條分支的樣子。如果我們希望可以看出哪些提交的訊息屬於哪一個分支，就可以使用`git merge --no-ff`，但是假如不在乎的話就可以使用`git merge`。
