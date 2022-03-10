@@ -20,6 +20,7 @@ This document is to log all changes for this project.
 - Update `git_tutorial/README.md` to introduct SHA-1.
 - Update `git_tutorial/README.md` to show how to merge branch.
 - Update `git_tutorial/README.md` to introduct the structure of branch.
+- Update `git_tutorial/README.md` to show how to solve conflict during merging branches. 
 
 ### Changed
 

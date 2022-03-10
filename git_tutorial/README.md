@@ -1047,3 +1047,279 @@ $ git log --graph
 (END)
 ```
 當我們合併完，使用`git log --graph`查看會發現分支線多了一個空洞，這個不使用參數`--no-ff`是完全不同的。從這個範例中我們可以知道使用`git merge`合併時兩條分支會整合成一條，但是使用`git merge --no-ff`則會同時保留這兩條分支的樣子。如果我們希望可以看出哪些提交的訊息屬於哪一個分支，就可以使用`git merge --no-ff`，但是假如不在乎的話就可以使用`git merge`。
+
+### 合併衝突
+現在我們想像一下這個情境，有一個專案同時由兩批人馬在開發，假設是開發一個賽車遊戲。團隊A負責處理使用者控制車輛的程式碼，團隊B則負責處理由AI控制的車輛。這兩個團隊在開發時，團隊A認為使用者控制的車輛之物件中，有段用來呈現車輛移動的程式碼有BUG，而修改這段程式碼，當然團隊B可能剛好發現這段程式碼有BUG，也修改了。可是問題就在於，這兩個團隊修改BUG的方式完全不同，那麼當他們做好自己的工作，這兩個團隊要把程式碼整合起來時，會發生什麼事呢？Git會回報說不能合併，因為那段呈現車輛移動的程式碼發生衝突。
+
+這個狀況不只是多人維護同一個專案會發生，就連只有一個人來維護一個專案也會發生。事實上只要使用分支，這個狀況遲早會遇到，說不定還經常發生。因此，我們也應該了解為何會發生合併衝突，以及該如何解決。
+
+我們來模擬合併衝突，第一步是在分支master中建立檔案`hello.c`，內容如下：
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void){
+  printf("Hello world!\n");
+  retrun 0;
+} // End of main
+```
+然後把這個檔案提交到儲存庫中：
+```bash
+$ git add .
+
+$ git commit -m "Add hello.c"
+[master 64becd2] Add hello.c
+ 1 file changed, 7 insertions(+)
+ create mode 100644 hello.c
+```
+接著建立兩個分支`teamA`和`teamB`，然後切換到分支`teamA`並修改`hello.c`，內容如下：
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void){
+  printf("Hello world, teamB!\n");
+  retrun 0;
+} // End of main
+```
+把修改過的`hello.c提交到儲存庫中：
+```bash
+$ git add .
+
+$ git commit -m "Update hello.c by teamA"
+[teamA 204f523] Update hello.c by teamA
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ git log --graph
+* commit 204f5230dff80c8484f6d9684de3f35eedbad574 (HEAD -> teamA)
+| Author: Joe <joe@email.tw>
+| Date:   Thu Mar 3 17:52:38 2022 +0800
+|
+|     Update hello.c by teamA
+|
+* commit 64becd2ed4ee1d24854df55a3bcf3bdea52dce04 (teamB, master)
+| Author: Joe <joe@email.tw>
+| Date:   Thu Mar 3 17:48:19 2022 +0800
+|
+|     Add hello.c
+|
+*   commit 65e497e3b11e3bcc75aa9c8799c0df017cc754fa
+|\  Merge: 8d0a25f 90bdb96
+| | Author: Joe <joe@email.tw>
+| | Date:   Thu Mar 3 15:35:58 2022 +0800
+| |
+| |     Merge branch 'test'
+| |
+| * commit 90bdb96a6e365605d127f985cc6ddec765a23845 (test)
+| | Author: Joe <joe@email.tw>
+| | Date:   Thu Mar 3 15:33:22 2022 +0800
+| |
+| |     Add color.txt
+| |
+| * commit e878e12d1b408d8df3e85464b4cd748e8fc1db4d
+|/  Author: Joe <joe@email.tw>
+|   Date:   Thu Mar 3 15:31:50 2022 +0800
+|
+|       Add new.txt
+|
+* commit 8d0a25fc3a80cf1bea78003c7df1697dc4ea3855
+| Author: Joe <joe@email.tw>
+| Date:   Mon Feb 21 17:04:12 2022 +0800
+|
+|     Add test.txt
+|
+* commit 7f707c650e3b3c9cafeebbc63f309a04057e542d
+| Author: Joe <joe@email.tw>
+| Date:   Fri Feb 18 10:43:01 2022 +0800
+|
+|     Add .gitignore
+|
+* commit cf04238a79903b480935682237eedabd465d15e7
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 17:32:12 2022 +0800
+|
+|     Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+|
+* commit 4913011d31e613f0fe0a041c3df7bd813cc2c95b
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 16:14:46 2022 +0800
+|
+|     Add tmp.txt
+|
+* commit 395bee40b5c1c9a159e178779ccbbc8ebf78a7ff
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 16:09:00 2022 +0800
+|
+|     Delete cat.txt
+|
+* commit a8b412ecc331c7df85df9c1f6cec2e6a9d092283
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 13:51:59 2022 +0800
+|
+|     Update test.txt
+|
+|     I update test.txt.
+|
+* commit b9cd7079788b33a7e4191c990a276c59b668e87d
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 11:58:31 2022 +0800
+|
+|     Add cat.txt
+|
+* commit 9eee82b4d028aa45f30913421708efd801938062
+  Author: Joe <joe@email.tw>
+  Date:   Thu Feb 17 10:55:07 2022 +0800
+
+      Init commit
+(END)
+```
+接下來我們切換到分支`teamB`，並且把`hello.c`修改下面的內容：
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void){
+  printf("Hello world, teamA!\n");
+  retrun 0;
+} // End of main
+```
+最後把這次的修改提交出去：
+```bash
+$ git add .
+
+$ git commit -m "Update hello.c by teamB"
+[teamB 5bb669d] Update hello.c by teamB
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ git log --graph
+* commit 5bb669dd888e9ccfba29b7f78957fc5de4f18b50 (HEAD -> teamB)
+| Author: Joe <joe@email.tw>
+| Date:   Thu Mar 3 17:58:41 2022 +0800
+|
+|     Update hello.c by teamB
+|
+* commit 64becd2ed4ee1d24854df55a3bcf3bdea52dce04 (master)
+| Author: Joe <joe@email.tw>
+| Date:   Thu Mar 3 17:48:19 2022 +0800
+|
+|     Add hello.c
+|
+*   commit 65e497e3b11e3bcc75aa9c8799c0df017cc754fa
+|\  Merge: 8d0a25f 90bdb96
+| | Author: Joe <joe@email.tw>
+| | Date:   Thu Mar 3 15:35:58 2022 +0800
+| |
+| |     Merge branch 'test'
+| |
+| * commit 90bdb96a6e365605d127f985cc6ddec765a23845 (test)
+| | Author: Joe <joe@email.tw>
+| | Date:   Thu Mar 3 15:33:22 2022 +0800
+| |
+| |     Add color.txt
+| |
+| * commit e878e12d1b408d8df3e85464b4cd748e8fc1db4d
+|/  Author: Joe <joe@email.tw>
+|   Date:   Thu Mar 3 15:31:50 2022 +0800
+|
+|       Add new.txt
+|
+* commit 8d0a25fc3a80cf1bea78003c7df1697dc4ea3855
+| Author: Joe <joe@email.tw>
+| Date:   Mon Feb 21 17:04:12 2022 +0800
+|
+|     Add test.txt
+|
+* commit 7f707c650e3b3c9cafeebbc63f309a04057e542d
+| Author: Joe <joe@email.tw>
+| Date:   Fri Feb 18 10:43:01 2022 +0800
+|
+|     Add .gitignore
+|
+* commit cf04238a79903b480935682237eedabd465d15e7
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 17:32:12 2022 +0800
+|
+|     Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+|
+* commit 4913011d31e613f0fe0a041c3df7bd813cc2c95b
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 16:14:46 2022 +0800
+|
+|     Add tmp.txt
+|
+* commit 395bee40b5c1c9a159e178779ccbbc8ebf78a7ff
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 16:09:00 2022 +0800
+|
+|     Delete cat.txt
+|
+* commit a8b412ecc331c7df85df9c1f6cec2e6a9d092283
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 13:51:59 2022 +0800
+|
+|     Update test.txt
+|
+|     I update test.txt.
+|
+* commit b9cd7079788b33a7e4191c990a276c59b668e87d
+| Author: Joe <joe@email.tw>
+| Date:   Thu Feb 17 11:58:31 2022 +0800
+|
+|     Add cat.txt
+|
+* commit 9eee82b4d028aa45f30913421708efd801938062
+  Author: Joe <joe@email.tw>
+  Date:   Thu Feb 17 10:55:07 2022 +0800
+
+      Init commit
+(END)
+```
+現在我們切換到分支`teamA`，然後嘗試看看把分支`teamB`合併過來：
+```bash
+$ git checkout teamA
+Switched to branch 'teamA'
+
+$ git merge --no-ff teamB
+Auto-merging hello.c
+CONFLICT (content): Merge conflict in hello.c
+Automatic merge failed; fix conflicts and then commit the result.
+```
+看到了吧，Git回報說發生合併衝突，那個有問題的檔案就是我們剛剛修改的`hello.c`。發生這種情況下，我們可以先看看`hello.c`的內容：
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(){
+<<<<<<< HEAD
+	printf("Hello world, teamB!\n");
+=======
+	printf("Hello world, teamA!\n");
+>>>>>>> teamB
+	return 0;
+} // End of main
+```
+那行的`<<<<<<< HEAD`和`>>>>>>> teamB`是Git註明說`hello.c`發生衝突的地方，前者用來表示當前的分支`teamA`修改的內容，而後者則表示即將合併過來的分支`teamB`修改的內容。一般來說Git在合併分支時，會根據兩個分支中每個檔案的修改情況，加以整合起來。然而，當多個人同時維護同一個專案時，如果彼此沒溝通好，就像這邊的範例一樣，`printf()`在兩個分支中印出不同的文字，在合併的過程中就會發生衝突。即使只有一個人在維護一個專案也會發生，因為我們在不同的分支中編輯檔案，有時一些修改會讓Git不知道該怎麼整合起來。
+
+當我們在合併分支遇到衝突時，第一件要做的事是先確認哪些檔案發生衝突，以及哪些內容有衝突。接著，針對衝突的部分來評估應該要使用哪一個分支修改的內容，然後修改有衝突的檔案，然後完成合併的工作。
+
+現在我們來嘗試解決`hello.c`的衝突，假設我們決定使用分支`teamB`的修改內容，那麼就把`hello.c`中屬於分支`teamA`的修改內容給刪除掉，當然也要把分支`temaB`的標註文字給刪除掉。這個時候`hello.c`的內容如下：
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(){
+	printf("Hello world, teamA!\n");
+	return 0;
+} // End of main
+```
+我們已經處理掉有衝突的檔案`hello.c`，接下來就該把`hello.c`放進暫存區中：
+```bash
+$ git add hello.c
+
+```
+最後，只要使用`git commit`就可以完成合併分支：
+```bash
+$ git commit
+[teamA acad1a5] Merge branch 'teamB' into teamA
+
+```
