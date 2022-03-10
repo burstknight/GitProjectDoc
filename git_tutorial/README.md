@@ -1323,3 +1323,57 @@ $ git commit
 [teamA acad1a5] Merge branch 'teamB' into teamA
 
 ```
+
+### 特殊分支： `HEAD`與`ORIG_HEAD`
+#### HEAD
+在前面介紹指令`git branch`時，有提到這個指令可以查看所有的分支：
+```bash
+$ git branch
+  master
+* teamA
+  teamB
+  test
+```
+除此之外，`*`標示的分支為目前所在的分支，`git branch`告訴我們目前在分支`teamA`。這裡有一個問題你可能會很好奇，既然一個專案中存在著好幾個分支，Git又是怎麼知道目前使用的是哪一個分支呢？
+
+這是因為有一個特殊的分支`HEAD`告訴Git目前使用了哪一個分支的緣故。其實`HEAD`是存在於目錄`.git`中的一個檔案，如果我們使用`ls -al`可以發現這個檔案：
+```bash
+$ ls -al .git/
+total 23
+drwxr-xr-x 1 JH-06 197121   0 Mar 10 11:54 ./
+drwxr-xr-x 1 JH-06 197121   0 Mar 10 11:51 ../
+-rw-r--r-- 1 JH-06 197121 449 Mar 10 11:52 COMMIT_EDITMSG
+-rw-r--r-- 1 JH-06 197121   0 Mar  3 15:51 FETCH_HEAD
+-rw-r--r-- 1 JH-06 197121  22 Mar  3 18:01 HEAD
+-rw-r--r-- 1 JH-06 197121  41 Mar  3 18:01 ORIG_HEAD
+-rw-r--r-- 1 JH-06 197121 171 Feb 21 17:48 config
+-rw-r--r-- 1 JH-06 197121  73 Feb 17 10:51 description
+drwxr-xr-x 1 JH-06 197121   0 Feb 17 10:51 hooks/
+-rw-r--r-- 1 JH-06 197121 674 Mar 10 11:52 index
+drwxr-xr-x 1 JH-06 197121   0 Feb 17 10:51 info/
+drwxr-xr-x 1 JH-06 197121   0 Feb 17 10:55 logs/
+drwxr-xr-x 1 JH-06 197121   0 Mar 10 11:52 objects/
+-rw-r--r-- 1 JH-06 197121  46 Feb 21 17:48 packed-refs
+drwxr-xr-x 1 JH-06 197121   0 Feb 17 10:51 refs/
+```
+現在我們使用指令`cat`來查看檔案`HEAD`到底存了什麼資料：
+```bash
+$ cat .git/HEAD
+ref: refs/heads/teamA
+
+```
+看到了吧，檔案`HEAD`記錄的資訊告訴我們目前使用的分支`teamA`。現在我們試試看切換到別的分支看看`HEAD`的內容會不會改變：
+```bash
+$ git checkout master
+Switched to branch 'master'
+
+$ cat .git/HEAD
+ref: refs/heads/master
+
+```
+檔案`HEAD`的內容確實改變了，而且我們可以知道目前使用的分支是`master`。現在我們已經知道了，只要讀取檔案`HEAD`的內容就可以讓Git知道目前使用哪一個分支。
+
+前面有說`HEAD`是一個特殊的分支，後面會用其他指令與`HEAD`搭配來說明怎麼使用。
+
+#### ORIG_HEAD
+在目錄`.git`中還有一個檔案`ORIG_HEAD`，這個檔案的用途是，當我們使用Git比較**危險的指令**時，可以讓我們反悔。
