@@ -25,5 +25,6 @@ This document is to log all changes for this project.
 - Update `git_tutorial/README.md` to show how to use `git reset`.
 
 ### Changed
+- Add more context for `ORIG_HEAD` in `git_tutorial/README.md`.
 
 ### Removed
