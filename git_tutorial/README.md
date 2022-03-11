@@ -1323,7 +1323,7 @@ $ git commit
 [teamA acad1a5] Merge branch 'teamB' into teamA
 
 ```
-
+## 修改歷史紀錄
 ### 特殊分支： `HEAD`與`ORIG_HEAD`
 #### HEAD
 在前面介紹指令`git branch`時，有提到這個指令可以查看所有的分支：
@@ -1377,3 +1377,261 @@ ref: refs/heads/master
 
 #### ORIG_HEAD
 在目錄`.git`中還有一個檔案`ORIG_HEAD`，這個檔案的用途是，當我們使用Git比較**危險的指令**時，可以讓我們反悔。
+
+### 取消先前的提交: `git reflog`、`git reset`
+有時我們提交一次某個檔案的修改，可是後來想想發現這次的修改不夠完美。又或是我們把某個分支合併過來，卻發現在合併的過程中可能哪個步驟沒做好。這個時候我們就會很想取消這些操作，當然Git提供了指令讓我們可以反悔。
+
+#### 查閱Git操作歷史紀錄: `git reflog`
+我們先了解一下指令`git reflog`是什麼，這個指令的用法如下：
+```bash
+$ git reflog
+
+$ git reflog
+64becd2 (HEAD -> master) HEAD@{0}: checkout: moving from teamA to master
+acad1a5 (teamA) HEAD@{1}: commit (merge): Merge branch 'teamB' into teamA
+204f523 HEAD@{2}: checkout: moving from teamB to teamA
+5bb669d (teamB) HEAD@{3}: commit: Update hello.c by teamB
+64becd2 (HEAD -> master) HEAD@{4}: checkout: moving from teamA to teamB
+204f523 HEAD@{5}: commit: Update hello.c by teamA
+64becd2 (HEAD -> master) HEAD@{6}: checkout: moving from master to teamA
+64becd2 (HEAD -> master) HEAD@{7}: commit: Add hello.c
+65e497e HEAD@{8}: merge test: Merge made by the 'recursive' strategy.
+8d0a25f HEAD@{9}: checkout: moving from test to master
+90bdb96 (test) HEAD@{10}: commit: Add color.txt
+e878e12 HEAD@{11}: commit: Add new.txt
+8d0a25f HEAD@{12}: checkout: moving from master to test
+8d0a25f HEAD@{13}: merge test: Fast-forward
+7f707c6 HEAD@{14}: checkout: moving from test to master
+8d0a25f HEAD@{15}: checkout: moving from master to test
+7f707c6 HEAD@{16}: checkout: moving from test to master
+8d0a25f HEAD@{17}: checkout: moving from dog to test
+0c62b45 HEAD@{18}: commit: Add dog.txt
+8d0a25f HEAD@{19}: checkout: moving from test to dog
+8d0a25f HEAD@{20}: checkout: moving from master to test
+7f707c6 HEAD@{21}: checkout: moving from test to master
+8d0a25f HEAD@{22}: checkout: moving from master to test
+:
+# 下面還有訊息，以下省略
+
+```
+這個指令的功能為管理我們透過Git管控版本的操作日誌，換句話說只要我們使用會影響提交的訊息有關的指令，這些動作都會被記錄下來。當我們使用`git reflog`時，可以得到到目前為止在這個專案中做了哪些事。在上面的範例中，`git reflog`會以一行為一個單位顯示每個操作，每一行中第一個欄位就是對應於每次提交訊息的SHA-1值，第二個欄位`HEAD@{}`是方便我們可以反悔某次提交的訊息，最右邊的欄位就是對應的提交訊息，或是我們切換分支的操作的具體細節。
+
+這邊會先說明`git reflog`，是因為當我們要反悔某次操作，或是使用後面會提到的一些會更動提交的歷史紀錄時，會用得上。
+
+#### 跳躍時間點: `git reset`
+接下來該說明指令`git reset`的用法：
+```bash
+$ git reset [--mixed|--soft|--hard] <ID>
+# --mixed : 預設參數，會捨棄掉暫存區的檔案，但不會動到工作區的檔案
+# --soft  : 不會捨棄暫存區與工作區的檔案
+# --hard  : 會完全捨棄暫存區與工作區的檔案
+# <ID>    : 提交訊息的SHA-1值
+```
+這個指令可以跳往提交訊息之歷史紀錄中任何一個提交變動，可以把這個指令想像成好像有個時光機器，我們使用這個時光機器跳到任何一個發生重大事件的時間點。至於`git reset`後面接的參數代表跳躍時的模式，這會影響工作區和暫存區的檔案，後面會用範例來說明。`git reset`後面接的`<ID>`通常是提交訊息的SHA-1值，用來控制應該跳到哪一次修改紀錄，至於這個SHA-1值可以使用前面提到的`git reflog`來找到，當然也可以使用`git log`來查閱。
+
+現在我們用範例來說明如何使用`git reset`，以及那三個參數會怎麼影響專案中的檔案。首先，我們先修改`hello.c`的內容，修改的內容如下：
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(){
+	printf("Hello world!\n");
+
+	for(int i = 0; i < 5; i++){
+		printf("i: %d\n", i);
+	}	// End of for-loop
+	return 0;
+} // End of main
+```
+然後把這次的修改提交出去：
+```bash
+$ git add .
+
+$ git commit -m "Update hello.c"
+[master 9497eaf] Update hello.c
+ 1 file changed, 4 insertions(+)
+
+```
+現在我們使用`git reflog`來確認看看剛剛的操作對應的SHA-1：
+```bash
+$ git reflog
+9497eaf (HEAD -> master) HEAD@{0}: commit: Update hello.c
+64becd2 HEAD@{1}: checkout: moving from teamA to master
+acad1a5 (teamA) HEAD@{2}: commit (merge): Merge branch 'teamB' into teamA
+204f523 HEAD@{3}: checkout: moving from teamB to teamA
+5bb669d (teamB) HEAD@{4}: commit: Update hello.c by teamB
+64becd2 HEAD@{5}: checkout: moving from teamA to teamB
+204f523 HEAD@{6}: commit: Update hello.c by teamA
+64becd2 HEAD@{7}: checkout: moving from master to teamA
+64becd2 HEAD@{8}: commit: Add hello.c
+65e497e HEAD@{9}: merge test: Merge made by the 'recursive' strategy.
+8d0a25f HEAD@{10}: checkout: moving from test to master
+90bdb96 (test) HEAD@{11}: commit: Add color.txt
+e878e12 HEAD@{12}: commit: Add new.txt
+8d0a25f HEAD@{13}: checkout: moving from master to test
+8d0a25f HEAD@{14}: merge test: Fast-forward
+7f707c6 HEAD@{15}: checkout: moving from test to master
+8d0a25f HEAD@{16}: checkout: moving from master to test
+7f707c6 HEAD@{17}: checkout: moving from test to master
+8d0a25f HEAD@{18}: checkout: moving from dog to test
+0c62b45 HEAD@{19}: commit: Add dog.txt
+8d0a25f HEAD@{20}: checkout: moving from test to dog
+8d0a25f HEAD@{21}: checkout: moving from master to test
+7f707c6 HEAD@{22}: checkout: moving from test to master
+:
+# 省略後面的內容
+```
+
+##### Mixed模式
+我們可以發現第一行就是剛剛提交`hello.c`的變動，我們也知道這個操作對應的SHA-1是`9497eaf`。現在我們試試看指令`git reset`跳回前一次的操作，但是我們先不使用任何參數：
+```bash
+$ git reset 9497eaf^
+Unstaged changes after reset:
+M       hello.c
+```
+稍微提醒一下，這邊的範例使用的SHA-1值請根據自己使用`git reflog`，因為每個人的提交訊息的SHA-1不會一樣。那個`^`代表使用`git reset`跳到`9497eaf`的前一次提交的狀態，也可以用`9497eaf~1`來表示前一次提交的狀態，`~`後面接的數字就是往前跳的次數。一般來說如果往前跳的次數比較多，就會使用`~`。現在我們來看看Git做了哪些事情，我們先查看一下狀態：
+```bash
+$ git log
+commit 64becd2ed4ee1d24854df55a3bcf3bdea52dce04 (HEAD -> master)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 17:48:19 2022 +0800
+
+    Add hello.c
+
+commit 65e497e3b11e3bcc75aa9c8799c0df017cc754fa
+Merge: 8d0a25f 90bdb96
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:35:58 2022 +0800
+
+    Merge branch 'test'
+
+commit 90bdb96a6e365605d127f985cc6ddec765a23845 (test)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:33:22 2022 +0800
+
+    Add color.txt
+
+commit e878e12d1b408d8df3e85464b4cd748e8fc1db4d
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:31:50 2022 +0800
+
+:
+# 以下省略
+
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   hello.c
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+我們先用`git log`確認，發現剛剛提交的訊息已經被取消了。如果我們去看`hello.c`，會發現內容不會改變，可是Git卻告訴我們這個檔案已經修改過了，並且還沒加進暫存區中。也就是說，使用`git reset`或`git reset --mixed`往前跳時，**修改過的檔案存儲存庫中丟回工作目錄中。**
+
+這邊再提一件事，我們以前提過每個分支都會指向提交訊息的SHA-1值，這表示`git reset`也可以搭配分支來使用。以剛剛的範例為例，我們知道目前使用的分支是`master`，所以可以這樣使用：
+```bash
+$ git reset master^
+```
+之前介紹`HEAD`有說過，這個特殊分支可以用來表示目前使用的分支。在這個範例中，我們使用的分支是`master`，也就是`HEAD`視為分支`master`，所以我們也可以這樣使用`git reset`：
+```bash
+$ git reset HEAD^
+```
+
+##### Soft模式
+在解說下一個參數之前，請先使用下面這個指令來取消剛剛的`git reset`指令：
+```bash
+$ git reset ORIG_HEAD
+```
+現在我們試試看`git reset --soft`會發生什麼事：
+```bash
+$ git reset --soft 9497eaf^
+
+$ git log
+commit 64becd2ed4ee1d24854df55a3bcf3bdea52dce04 (HEAD -> master)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 17:48:19 2022 +0800
+
+    Add hello.c
+
+commit 65e497e3b11e3bcc75aa9c8799c0df017cc754fa
+Merge: 8d0a25f 90bdb96
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:35:58 2022 +0800
+
+    Merge branch 'test'
+
+commit 90bdb96a6e365605d127f985cc6ddec765a23845 (test)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:33:22 2022 +0800
+
+    Add color.txt
+
+commit e878e12d1b408d8df3e85464b4cd748e8fc1db4d
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:31:50 2022 +0800
+
+:
+# 以下省略
+
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   hello.c
+```
+我們先用`git log`查看歷史紀錄，確實可以發現更動`hello.c`的那次提交訊息已經被取消掉了。使用`git status`可以發現，Git把那次修改的檔案`hello.c`丟到暫存區中。我們可以從這個範例知道，使用`git reset --soft`往前跳時，**更動過的檔案會丟回暫存區中。**
+
+##### Hard模式
+最後要解說Hard模式，不過在那之前，一樣也要下指令來取消剛剛的操作：
+```bash
+$ git reset ORIG_HEAD
+```
+我們來看看使用`git reset --hard`，Git會如何處理：
+```bash
+$ git reset --hard 9497eaf^
+HEAD is now at 64becd2 Add hello.c
+
+$ git log
+commit 64becd2ed4ee1d24854df55a3bcf3bdea52dce04 (HEAD -> master)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 17:48:19 2022 +0800
+
+    Add hello.c
+
+commit 65e497e3b11e3bcc75aa9c8799c0df017cc754fa
+Merge: 8d0a25f 90bdb96
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:35:58 2022 +0800
+
+    Merge branch 'test'
+
+commit 90bdb96a6e365605d127f985cc6ddec765a23845 (test)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:33:22 2022 +0800
+
+    Add color.txt
+
+commit e878e12d1b408d8df3e85464b4cd748e8fc1db4d
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:31:50 2022 +0800
+
+:
+# 以下省略
+
+$ git status
+On branch master
+nothing to commit, working tree clean
+
+```
+使用`git reset --hard`之後，用`git log`確認可以發現Git確實往前跳。我們再使用`git status`確認，Git會告訴我們沒有任何檔案修改過。假如查看`hello.c`，會發現是我們修改之前的內容：
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(){
+	printf("Hello world!\n");
+	return 0;
+} // End of main
+```
+從這個範例中，我們可以知道使用`git reset --hard`往前跳，**至於剛剛提交的修改過的檔案全部都會捨棄掉**。因此，我們才會看到`hello.c`會變成修改之前的檔案。

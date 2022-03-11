@@ -22,6 +22,7 @@ This document is to log all changes for this project.
 - Update `git_tutorial/README.md` to introduct the structure of branch.
 - Update `git_tutorial/README.md` to show how to solve conflict during merging branches. 
 - Update `git_tutorial/README.md` to introduct `HEAD` and `ORIG_HEAD`.
+- Update `git_tutorial/README.md` to show how to use `git reset`.
 
 ### Changed
 
