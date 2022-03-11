@@ -24,6 +24,7 @@ This document is to log all changes for this project.
 - Update `git_tutorial/README.md` to introduct `HEAD` and `ORIG_HEAD`.
 - Update `git_tutorial/README.md` to show how to use `git reset`.
 - Update `git_tutorial/README.md` to show the useful bash commands.
+- Update `git_tutorial/README.md` to introduct tag.
 
 ### Changed
 - Add more context for `ORIG_HEAD` in `git_tutorial/README.md`.

@@ -1650,4 +1650,275 @@ int main(){
 	return 0;
 } // End of main
 ```
-從這個範例中，我們可以知道使用`git reset --hard`往前跳，**至於剛剛提交的修改過的檔案全部都會捨棄掉**。因此，我們才會看到`hello.c`會變成修改之前的檔案。
+從這個範例中，我們可以知道使用`git reset --hard`往前跳，**至於剛剛提交的修改過的檔案全部都會捨棄掉**。因此，我們才會看到`hello.c`會變成修改之前的檔案。最後，記得使用`git reset --hard ORIG_HEAD`回復，這樣後面的範例才不會亂掉。
+
+## 標籤
+### 何謂標籤?
+標籤(Tag)是指向某個提交訊息物件之SHA-1值的物件，這有點類似分支，但是兩者完全不同。前面談到分支時曾說過，Git會用類似鏈結串列的方式把提交訊息物件串起來，當我們修改檔案並提交一次時，Git就會建立一個新的提交訊息物件放到這個鏈結串列的最尾端，這個時候分支就會指向最新的提交訊息的物件。換言之，分支會隨著提交一次訊息而變動。
+
+然而，當我們做出標籤，這個標籤就會永遠指向當時所在的提交訊息之物件。假如我們之後修改了檔案，並且提交一次，先前做的標籤並不會變動。這個特性會在後面用範例來展示。
+
+如果標籤不會隨著我們提交訊息而變動，那麼什麼情況下會使用標籤呢？比較常見的情況是，當我們開發一個專案到一個階段時，假設我們都已經完整測試過了，都沒有任何問題，也許可以釋出這個專案的第一版本，這個時候就可以建一個標籤來註明說到這邊提交的歷史為止都是第一版本。標籤的功能可以想像成我們在看書時，可能會在比較重要的地方貼上便條紙，註記一些重要的訊息。
+
+在Git中標籤分為兩種，輕量標籤(Lightweigt tag)與附註標籤(Annotated tag)，這兩者後面會進一步說明。
+
+### 輕量標籤(Lightweight tag): `git tag`
+輕量標籤是指在提交訊息物件的旁邊做出一個僅有名稱的標籤，我們只能從標籤的名稱中了解到該標籤的用意。光看這個說明也許很難懂，等後面介紹附註標籤時，就可以比較這兩者之間的差異。接下來說明輕量標籤的建立方式，使用的指令如下：
+```bash
+$ git tag <tag-name>
+# <tag-name>  : 標籤名稱
+```
+做一個輕量標籤非常簡單，只要使用`git tag`後面接想做的標籤名稱就可以了。現在我們試試看做一個標籤：
+```bash
+$ git tag test
+
+$ git log
+commit 9497eaf1fba0313a9f2b35fa78911711d1029b9a (HEAD -> master, tag: test)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 10 17:13:14 2022 +0800
+
+    Update hello.c
+
+commit 64becd2ed4ee1d24854df55a3bcf3bdea52dce04
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 17:48:19 2022 +0800
+
+    Add hello.c
+
+commit 65e497e3b11e3bcc75aa9c8799c0df017cc754fa
+Merge: 8d0a25f 90bdb96
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:35:58 2022 +0800
+
+    Merge branch 'test'
+
+commit 90bdb96a6e365605d127f985cc6ddec765a23845 (test)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:33:22 2022 +0800
+
+:
+# 以下省略
+```
+我們先建一個標籤`test`，然後使用`git log`查看可以發現最新的提交訊息中，最右邊元括號中多了`tag: test`，這個就是我們剛剛做出來的標籤。Git允許我們在同一個提交訊息上做許多個標籤，如果我們有需要的會，現在我們試試看再做一個標籤：
+```bash
+$ git tag cat
+
+$ git log
+commit 9497eaf1fba0313a9f2b35fa78911711d1029b9a (HEAD -> master, tag: test, tag: cat)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 10 17:13:14 2022 +0800
+
+    Update hello.c
+
+commit 64becd2ed4ee1d24854df55a3bcf3bdea52dce04
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 17:48:19 2022 +0800
+
+    Add hello.c
+
+commit 65e497e3b11e3bcc75aa9c8799c0df017cc754fa
+Merge: 8d0a25f 90bdb96
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:35:58 2022 +0800
+
+    Merge branch 'test'
+
+commit 90bdb96a6e365605d127f985cc6ddec765a23845 (test)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:33:22 2022 +0800
+:
+# 以下省略
+```
+做完標籤以後，使用`git log`就可以看到剛剛做的標籤`cat`確實標在最新的提交訊息上。
+
+### 附註標籤(Annotated tag): `git tag -a`
+附註標籤是指在某個提交訊息旁邊做出一個標籤，而且這個標籤可以儲存一些訊息，幫助我們了解當初做這個標籤的用意。製作附註標籤的指令如下：
+```bash
+$ git tag -a <tag-name> [-m <message>]
+# -a  : 使用這個參數會做出附註標籤
+# -m  : 用來給予標籤的訊息
+```
+只要在`git tag`後面接上參數`-a`，就可以做出附註標籤。至於那個參數`-m`，有點類似`git commit`的參數，只要使用了這個參數，後面就可以直接輸入訊息給標籤中。假如不使用參數`-m`，當我們輸入完指令並按下Enter鍵，Git就會開啟編輯器要求我們在編輯器上輸入訊息。
+
+現在我們試著做一個附註標籤：
+```bash
+$ git tag -a ann-tag -m "This is a annotated tag!"
+
+$ git log --oneline
+9497eaf (HEAD -> master, tag: test, tag: cat, tag: ann-tag) Update hello.c
+64becd2 Add hello.c
+65e497e Merge branch 'test'
+90bdb96 (test) Add color.txt
+e878e12 Add new.txt
+8d0a25f Add test.txt
+7f707c6 Add .gitignore
+cf04238 Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+4913011 Add tmp.txt
+395bee4 Delete cat.txt
+a8b412e Update test.txt
+b9cd707 Add cat.txt
+9eee82b Init commit
+```
+我們做出附註標籤`ann-tag`，然後使用`git log --oneline`確認，可以發現我們確實做出一個附註標籤。只看`git log`顯示的訊息會覺得輕量標籤和附註標籤好像沒什麼差別，接下來我們使用下面的指令來說明這兩者的差異：
+```bash
+$ git show <tag-name>
+# <tag-name>  : 標籤的名稱
+
+# 查閱標籤cat
+$ git tag cat
+commit 9497eaf1fba0313a9f2b35fa78911711d1029b9a (HEAD -> master, tag: test, tag: show, tag: cat, tag: ann-tag)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 10 17:13:14 2022 +0800
+
+    Update hello.c
+
+diff --git a/hello.c b/hello.c
+index f24ebc5..fd014ba 100644
+--- a/hello.c
++++ b/hello.c
+@@ -3,5 +3,9 @@
+
+ int main(){
+        printf("Hello world!\n");
++
++       for(int i = 0; i < 5; i++){
++               printf("i: %d\n", i);
++       }       // End of for-loop
+        return 0;
+ } // End of main
+
+# 查閱標籤ann-tag
+$ git show ann-tag
+Tagger: Joe <joe@email.tw>
+Date:   Fri Mar 11 16:11:54 2022 +0800
+
+This is a annotated tag!
+
+commit 9497eaf1fba0313a9f2b35fa78911711d1029b9a (HEAD -> master, tag: test, tag: show, tag: cat, tag: ann-tag)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 10 17:13:14 2022 +0800
+
+    Update hello.c
+
+diff --git a/hello.c b/hello.c
+index f24ebc5..fd014ba 100644
+--- a/hello.c
++++ b/hello.c
+@@ -3,5 +3,9 @@
+
+ int main(){
+        printf("Hello world!\n");
++
++       for(int i = 0; i < 5; i++){
++               printf("i: %d\n", i);
++       }       // End of for-loop
+        return 0;
+ } // End of main
+(END)
+
+```
+使用`git show`顯示標籤`cat`的訊息包括這個標籤所屬的提交訊息物件，以及這個提交訊息物件中的檔案更動的差異。這邊要注意，當我們顯示標籤`ann-tag`時，我們得到的資訊不只是該標籤所屬的提交訊息物件與檔案更動的差異，這個資訊還多了我們當初做`ann-tag`時輸入的訊息，也就是那行`This is a annotated tag!`。現在明白輕量標籤與附註標籤之間的差異吧。這邊再提一下，`git show`也不只可以查看標籤，只要是Git物件，它都可以顯示物件中的內容，如果有興趣的話，可以對分支使用`git show`看看會顯示出什麼訊息。
+
+其實使用`git tag`時，在標籤名稱後面接提交訊息物件的SHA-1值，這麼做標籤就會貼在那個提交訊息的物件上。現在我們來試試看，第一步是先用`git log`確認提交訊息的SHA-1值是多少：
+```bash
+$ git log --oneline
+9497eaf (HEAD -> master, tag: test, tag: show, tag: light-tag, tag: cat, tag: ann-tag) Update hello.c
+64becd2 Add hello.c
+65e497e Merge branch 'test'
+90bdb96 (test) Add color.txt
+e878e12 Add new.txt
+8d0a25f Add test.txt
+7f707c6 Add .gitignore
+cf04238 Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+4913011 Add tmp.txt
+395bee4 Delete cat.txt
+a8b412e Update test.txt
+b9cd707 Add cat.txt
+9eee82b Init commit
+```
+假設我們想在`cf04238`貼上一個附註標籤，說明那次提交的操作是把檔案`test.txt`重新命名為`bird.txt`。既然知道那次提交的操作的SHA-1值是多少，我們就來做標籤：
+```bash
+$ git tag -a rename cf04238 -m "Rename test.txt to bird.txt"
+
+$ git log --oneline
+9497eaf (HEAD -> master, tag: test, tag: show, tag: light-tag, tag: cat, tag: ann-tag) Update hello.c
+64becd2 Add hello.c
+65e497e Merge branch 'test'
+90bdb96 (test) Add color.txt
+e878e12 Add new.txt
+8d0a25f Add test.txt
+7f707c6 Add .gitignore
+cf04238 (tag: rename) Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+4913011 Add tmp.txt
+395bee4 Delete cat.txt
+a8b412e Update test.txt
+b9cd707 Add cat.txt
+9eee82b Init commit
+```
+做出標籤`rename`以後，用`git log --oneline`可以發現這個標籤確實做在對檔案`test.txt`重新命名那次的提交訊息上。
+
+至於到底該使用輕量標籤還是附註標籤呢?這個就看個人喜好。如果希望以後查閱標籤時可以得到更多訊息，就使用附註標籤。假如認為以後也不會想查閱標籤的訊息，只是想用簡短標籤名稱來提醒自己曾做過什麼事情或未做過的事情，也可以使用輕量標籤。一般來說附註標籤常用於註記專案的版本號，並且在這個標籤上附上這個版本新增了哪些功能、修正了哪些錯誤等訊息，方便以後回顧。
+
+### 標籤與分支的差異
+前面在介紹標籤時有提過，標籤與分支最大的不同點就在於，當我們提交訊息時，分支也會更動，但是標籤卻不會。現在我們來實驗看看這個現象，首先修改檔案`color.txt`，內容如下：
+```
+This is color.txt!
+```
+接下來把這個修改提交出去：
+```bash
+$ git add .
+
+$ git commit -m "Update color.txt'
+[master 464fb14] Update color.txt
+ 1 file changed, 1 insertion(+)
+```
+現在我們使用`git log`來確認看看，前面做的標籤會不會跟著移動：
+```bash
+$ git log --oneline
+464fb14 (HEAD -> master) Update color.txt
+9497eaf (tag: test, tag: show, tag: light-tag, tag: cat, tag: ann-tag) Update hello.c
+64becd2 Add hello.c
+65e497e Merge branch 'test'
+90bdb96 (test) Add color.txt
+e878e12 Add new.txt
+8d0a25f Add test.txt
+7f707c6 Add .gitignore
+cf04238 (tag: rename) Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+4913011 Add tmp.txt
+395bee4 Delete cat.txt
+a8b412e Update test.txt
+b9cd707 Add cat.txt
+9eee82b Init commit
+```
+注意到了吧，之前做的標籤都移動也不動，可是分支`master`卻移動了。
+
+### 刪除標籤
+我們已經學會了怎麼做出標籤，那麼假如在做標籤的過程中，發現標籤的名稱輸入錯誤，或是已經做好了附註標籤，卻發現李面的訊息寫錯，又或者是當初做標籤只是想提醒自己有些事情以後要做完，而後來已經把該做的事做完了，這個標籤不需要保留，這個時候該怎麼辦呢？
+
+遇到這些情況，第一件事就是刪除掉標籤。如果是做錯標籤，那就刪除掉以後，再做一個新的。現在我們就來談談該如何刪除標籤：
+```bash
+$ git tag -d <tag-name>
+# <tag-name>  : 標籤名稱
+```
+其實刪除標籤很簡單，只要在指令`git tag`後面接上參數`-d`，然後指定要刪除的標籤名稱就可以。現在我們試試看刪除標籤`test`：
+```bash
+$ git tag -d test
+Deleted tag 'test' (was 9497eaf)
+
+$ git log --oneline
+464fb14 (HEAD -> master) Update color.txt
+9497eaf (tag: show, tag: light-tag, tag: cat, tag: ann-tag) Update hello.c
+64becd2 Add hello.c
+65e497e Merge branch 'test'
+90bdb96 (test) Add color.txt
+e878e12 Add new.txt
+8d0a25f Add test.txt
+7f707c6 Add .gitignore
+cf04238 (tag: rename) Rename test.txt -> bird.txt and Move tmp.txt into directory tmp
+4913011 Add tmp.txt
+395bee4 Delete cat.txt
+a8b412e Update test.txt
+b9cd707 Add cat.txt
+9eee82b Init commit
+```
+刪除標籤以後，使用`git log`確認，可以發現標籤`test`真的被刪掉了。
