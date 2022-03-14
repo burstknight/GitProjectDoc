@@ -25,6 +25,7 @@ This document is to log all changes for this project.
 - Update `git_tutorial/README.md` to show how to use `git reset`.
 - Update `git_tutorial/README.md` to show the useful bash commands.
 - Update `git_tutorial/README.md` to introduct tag.
+- Update `git_tutorial/README.md` to show how to generate SSH key.
 
 ### Changed
 - Add more context for `ORIG_HEAD` in `git_tutorial/README.md`.

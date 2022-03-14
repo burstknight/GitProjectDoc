@@ -1922,3 +1922,78 @@ b9cd707 Add cat.txt
 9eee82b Init commit
 ```
 刪除標籤以後，使用`git log`確認，可以發現標籤`test`真的被刪掉了。
+
+## 遠端協作
+Git支援遠端協作，也就是同一個專案可以讓多個人一起維護。本章節將會說明該如何使用Git來做遠端協作。
+
+### GitHub是什麼?
+剛接觸Git的人應該都會以為Git和GitHub是一樣的東西，但實際上這兩者是不同的。
+
+Git是一個工具，可以讓我們管控專案的版本，而且只要在電腦中安裝了Git就可以直接使用，即使在沒有網路的情況下也可以使用。只要每個人電腦中都裝了Git，就可以一起共同開發同一個專案。
+
+至於GitHub，可以把它想像成雲端硬碟，我們可以把專案放在那上面。當我們開發的電腦掛掉時，我們還有一份備份留在GitHub，隨時都可以把這個備份抓下來，所以損失不會太大。除此之外，因為Git本身支援遠端協作，所以只要能瀏覽我們在GitHub放的專案，任何人都可以跟我們合作一起維護這個專案。
+
+使用GitHub時，一定在要電腦中安裝Git，才能夠透過Git來對專案做版本管控。然而，使用Git時，則不見得一定要使用GitHub。這也是Git與GitHub之間的差別。
+
+### 使用GitHub來做遠端協作
+這邊會開始介紹如何搭配GitHub進行遠端協作。這裡就不贅述如何在GitHub辦一個新的帳號，後面的內容只會聚焦在在GitHub與指令上的操作。
+
+#### 設定SSH金鑰
+我們透過GitHub進行遠端協作時，一定會遇到同步問題。當我們在自己的電腦上修改專案中某個檔案，比方說修正一個嚴重的BUG。這個時候就應該把修改的部分上傳到GitHub上，並且通知其他人我們已經更新過專案，他們應該下載最新狀態來修復這個BUG。當然，假如團隊的其他人在專案中新增了功能或修正了錯誤，我們也應該盡早把最新狀態抓下來。
+
+只要所有人在自己電腦的專案可以持續同步到最新狀態，才有辦法共同維護同一個專案。要做到同步這件事，就需要透過網路來傳輸專案的開發狀態。GitHub提供三種方法：
+- HTTPS
+- SSH
+- GitHub CLI
+  
+HTTPS用起來比較麻煩，現在GitHub要求在自己的帳號中新增一組密碼來使用，但是密碼是由GitHub產生，而且GitHub產生的密碼都不太好記憶，所以不太建議使用HTTPS。至於GitHub CLI，這個是GitHub開發的程式，可以讓我們透過下指令的方式，就像使用網頁瀏覽器在GitHub上做任何事。因為我沒用過GitHub CLI，所以這邊就不多介紹。我會比較推薦使用SSH，我們只要在自己的電腦產生SSH金鑰，然後把這個金鑰的公鑰傳給GitHub上，就可以一直使用。
+
+現在我們來談談該怎麼設定SSH金鑰。第一步是先產生金鑰，只要使用`ssh-keygen`就可以產生SSH金鑰。為了方便說明，這邊會把`ssh-keygen`顯示的訊息切割。現在我們開始產生SSH金鑰吧：
+```bash
+$ ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/c/Users/JH-06/.ssh/id_rsa):
+Created directory '/c/Users/JH-06/.ssh'.
+```
+在我們輸入`ssh-keygen`以後，就會跳出上面的訊息，在這一步它會告訴我們SSH金鑰的檔案會儲存在哪裡，這個時候只要按下Enter鍵即可。由於電腦一開始沒有目錄`.ssh`，所以`ssh-keygen`會幫我們建出來。接著，在終端機中會出現下面的訊息，那是要求我們設定密碼，要記得輸入的過程中不會顯示任何字元，當然也可以不設定密碼。還有一點要注意，假如有輸入密碼，`ssh-keygen`還會要求再輸入一次，如果沒有要設定密碼，這兩次要求就直接按Enter鍵。
+```bash
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+```
+設定完密碼，SSH金鑰就算完成了，之後會出現下面的訊息：
+```bash
+Your identification has been saved in /c/Users/JH-06/.ssh/id_rsa
+Your public key has been saved in /c/Users/JH-06/.ssh/id_rsa.pub
+The key fingerprint is:
+SHA256:5BAom7M6Fc1zrInzG9DbivZHu5IvtKOa1Cs3uUk3pQY JH-06@DESKTOP-CPVBL2K
+The key's randomart image is:
++---[RSA 3072]----+
+|     ..          |
+|  . .  .         |
+|   * .. .        |
+|  =.+ o+         |
+|  .E.= .S        |
+|  *.=o+          |
+| + *+O..         |
+|+oo=%o+          |
+|o+=**Bo.         |
++----[SHA256]-----+
+```
+這邊要提幾個重點，`ssh-keygen`顯示的結果訊息中，我們需要知道的是產生的金鑰檔會是`id_rsa`和`id_rsa.pub`，以及這兩個檔案會儲存在哪裡。請注意，那個`id_rsa`檔案的內容不要隨便外傳，而`id_rsa.pub`之後在設定GitHub會用到。
+
+現在我們來設定GitHub的金鑰，第一步是先登入GitHub，然後點擊有上角使用者帳號的圖示，然後按下`Settings`：
+![goto_settings](goto_settings.png)
+
+進入設定畫面中，請點選左邊那排的`SSH and GPG keys`：
+![goto_ssh](goto_SSH.png)
+
+接著，請按下`New SSH key`，來把剛剛產生的金鑰放到GitHub上：
+![goto_ssh](new_ssh_key.png)
+
+接下來請先在終端機中輸入下面的指令，來確認`id_rsa.pub`的內容：
+```bash
+$ cat ~/.ssh/id_rsa.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCqDkYLFvuZr1HMYz3Fl/Wv2ALXabC/UM23dOlucJzjk5b38Invv+gtAN2JSNU/G4BUvzcWyQP63/r/bfGex/uHc8fHLEEGjuWGhVP2Q8czqEU3xaVuqWO+X19udwnPpz373b1oOVxQGQqLsWLdu/ykqEjrxjQpkrUhTwngK/Mwrv2xOub+ZKLKWfhlLCSOMiq13YUe+jUhiAXyBrMb9+m7sjnVE+4vd8GsfU9sall2Zli1ncbvzOcGo1TWFoY0sMKgp/eBbAYbIYE6DJUe7EFpxScHb2noA4+jc1HzZ8PaThtaX++l+bRBFj39e68goexV0IWa4p01MyeAEuyfNoStO1geEs1KZ7iXMVBInnRTA2WsK9z1wQ/Lm6uWJ5+/4uQGc+qxoml9BqZdL8akJPdoM/2lfza/Rsan5xIoK0IT2DdLQ/2A7UnvZE+qB2f85WsSFUu0iWkd+rlao9vOiypjKTBSioPpHIpy5dkcG8SLGcCkPGUgjb4esMBP+dTa0/U= JH-06@DESKTOP-CPVBL2K
+```
+當然，你也可以使用像是Notepad++來讀這個檔案，只要記得檔案的路徑不要搞錯就沒問題。現在請把`id_rsa.pub`這個檔案的內容全部複製起來，記住要複製自己的，不要複製本文的。只要照著前面在GitHub的操作，應該會出現下面的畫面，請把`id_rsa.pb`的內容貼到`Key`下面那一欄，至於`Title`那欄可以隨便填，那只是方便我們管理每個金鑰用的。最後，只要按下`Add SSH key`就設定完成。
+![set_ssh_key](set_ssh_key.png)
