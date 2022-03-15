@@ -2280,3 +2280,85 @@ To github.com:burstknight/testGit.git
 假如去看GitHub的儲存庫，會發現多了一個分支`car`。這裡要注意，之前使用`git push`上傳時，由於本機儲存庫的分支與遠端儲存庫的分支的名稱相同，所以只需要在這個指令後面直接輸入跟欲上傳分支相同名稱即可。然而，這次上傳分支`test`在遠端儲存庫中對應於分支`car`，而且遠端分支`car`不存在，所以後面才要用`:`來做個對應。
 
 一般來說，像剛剛那個範例比較不會使用，因為還要記得本機儲存庫的分支對應到遠端儲存庫的哪一個分支，用起來也比較麻煩。如果要重新命名遠端分支，建議先使用`git branch -m`把本機儲存庫的分支更改名稱，然後再把遠端儲存庫那個舊的分支刪掉，最後才使用`git push`上傳更改後的分支到GitHub上。
+
+#### 下載來更新本機儲存庫: `git fetch`
+上一小節我們學會了怎麼上傳到GitHub，現在該來學習怎麼從GitHub下載來更新本機儲存庫。我們可以使用指令`git fetch`來更新本機儲存庫，這個指令的用法如下：
+```bash
+$ git fetch [remote_name]
+# remote_name : 遠端儲存庫的名稱，這會下載在這個遠端儲存庫中所有的分支
+```
+如果我們只使用`git fetch`，就只會下載目前本機所使用之分支所對應的分支。若在這個指令後面加上遠端儲存庫的名稱，則會把該遠端儲存庫所有的分支下載下來。
+
+說了這麼多可能還是不知道怎麼使用，現在我們試試看使用`git fetch`：
+```bash
+$ git chechout master
+Switched to branch 'master'
+
+$ git fetch
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+```
+畢竟GitHub上那個儲存庫只有我們自己在管理，而且那上面的修改進度跟本機一樣，所以使用`git fetch`當然沒有東西可以下載。我們在GitHub上修改檔案，來模擬遠端儲存庫有新的內容可以更新到本機。如下面的畫面，請注意橘框要顯示`master`，這代表我們目前使用分支`master`，然後直接點擊檔案`test`。
+![modify_file](modify_file.png)
+
+這個時候會進入下面的畫面，在這個畫面中我們可以查看檔案`test.txt`的內容。接下來請點選畫面中那個像鉛筆的圖案，它可以讓我們編輯檔案。
+![open_editor](open_editor.png)
+
+我們可以在下面的畫面中紅框的區域編輯這個檔案的內容。請照著下面的圖片來編輯檔案的內容。
+![change_file](change_file.png)
+
+接下來請把網頁瀏覽器滑到底下，就會出現下面的對話框。這個對話框有點像是指令`git add`與`git commit`的結合，我們透過網頁編輯檔案，然後在這個對話框中輸入這次修改了哪些東西，以及為何要修改。紅框用來輸入這次提交訊息的標題，而綠框用來更詳細說明這次修改的狀況，當然這個也可以什麼都不輸入，最後只要按下橘框那個`Commit changes`的按鈕，就可以儲存這次的修改。請照著下面的圖片來輸入提交訊息的內容，然後儲存這次的修改。
+![commit](commit.png)
+
+現在來到重頭戲了，我們試著使用`git fetch`，看看本機儲存庫會發生什麼事：
+```bash
+$ git fetch
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), 646 bytes | 5.00 KiB/s, done.
+From github.com:burstknight/testGit
+   464fb14..5dc2f1e  master     -> origin/master
+
+$ git log
+commit 464fb14f19a5525a97b1042a444f15e6f7efc71f (HEAD -> master)
+Author: Joe <joe@email.tw>
+Date:   Fri Mar 11 17:08:40 2022 +0800
+
+    Update color.txt
+
+commit 9497eaf1fba0313a9f2b35fa78911711d1029b9a (tag: show, tag: light-tag, tag: cat, tag: ann-tag)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 10 17:13:14 2022 +0800
+
+    Update hello.c
+
+commit 64becd2ed4ee1d24854df55a3bcf3bdea52dce04
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 17:48:19 2022 +0800
+
+    Add hello.c
+
+commit 65e497e3b11e3bcc75aa9c8799c0df017cc754fa
+Merge: 8d0a25f 90bdb96
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:35:58 2022 +0800
+:
+# 以下省略
+```
+當我們使用`git fecth`以後，它會回報說已經從GitHub下載完成，可是我們使用`git log`查看時卻發現怎麼剛剛在網頁上的修改沒更新到本機的分支`master`。
+
+會有這個狀況是因為`git fetch`的處理機制。實際上Git會在儲存庫中建出分支`origin/master`來代表遠端儲存庫的分支`master`。當我們使用`git fetch`，這相當於更新本機儲存庫的分支`origin/master`，而分支`master`則不影響。如果我們希望讓本機儲存庫的分支`master`可以更新，可以使用`git merge`來把分支`origin/master`合併過來。
+```bash
+$ git merge origin/master
+Updating 464fb14..5dc2f1e
+Fast-forward
+ test.txt | 1 +
+ 1 file changed, 1 insertion(+)
+```
+我們使用`git merge`而不使用`git merge --no-ff`的原因在於，這兩個分支本來就是同一個分支，既然如此就沒必要透過`git merge --no-ff`來保留分支`origin/master`的樣子。
+
+換句話說，我們透過`git fetch`下載遠端儲存庫的最新修改紀錄，之後還需要使用`git merge`來更新本機儲存庫的每個分支才行。`git fetch`之所以要用這種比較麻煩的方式來更新本機儲存庫的原因在於，假如我們在使用的儲存庫是在GitHub上某人的專案，我們自己開發時發現原作者已經更新了，這個時候就可以先用`git fetch`下載原作者的更新狀況來確認有哪些東西已經修改過了。假如確定沒什麼問題，當然就可以使用`git merge`把原作者修改的東西合併過來。
+
+也許你會想問，`git fetch`和`git clone`有什麼區別？這兩者的確都是從GitHub下載遠端儲存庫，但是使用的時機不同。當我們想要使用的專案不在自己的電腦時，就會使用`git clone`來下載，也就是說這個指令只會使用一次。至於`git fetch`，這個通常是用在更新，所以在使用完`git clone`以後，就可能會經常使用到。
