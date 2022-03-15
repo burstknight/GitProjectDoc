@@ -2362,3 +2362,87 @@ Fast-forward
 換句話說，我們透過`git fetch`下載遠端儲存庫的最新修改紀錄，之後還需要使用`git merge`來更新本機儲存庫的每個分支才行。`git fetch`之所以要用這種比較麻煩的方式來更新本機儲存庫的原因在於，假如我們在使用的儲存庫是在GitHub上某人的專案，我們自己開發時發現原作者已經更新了，這個時候就可以先用`git fetch`下載原作者的更新狀況來確認有哪些東西已經修改過了。假如確定沒什麼問題，當然就可以使用`git merge`把原作者修改的東西合併過來。
 
 也許你會想問，`git fetch`和`git clone`有什麼區別？這兩者的確都是從GitHub下載遠端儲存庫，但是使用的時機不同。當我們想要使用的專案不在自己的電腦時，就會使用`git clone`來下載，也就是說這個指令只會使用一次。至於`git fetch`，這個通常是用在更新，所以在使用完`git clone`以後，就可能會經常使用到。
+
+#### 該如何解決有時無法上傳到GitHub
+我們來思考一個情境，假設有一個專案叫做`HelloMan`，這個專案就放在GitHub，Joe和Alice是同一個開發同隊的成員，他們兩人一起開發這個專案。假設Joe在這個專案中實作了某個功能，然後想使用`git push`把這次的修改上傳到GitHub上。偏偏在這個時候，Alice比Joe早幾秒鐘使用`git push`把她修改的東西上傳到GitHub。請問Joe在使用`git push`上傳時會發生什麼事呢？
+
+這個時候Git有可能會告訴Joe，因為遠端儲存庫的狀態比他在自己電腦上的還要新，所以不讓他上傳。在這種情況下，有兩種方法可以解決：
+- 使用`git push -f`強制上傳
+- 先用`git fetch`更新自己電腦的儲存庫，然後再使用`git push`上傳
+
+第一個方法中是在指令`git push`後面接參數`-f`，這個會強制把目前的修改狀態上傳到GitHub上。這麼做確實可以讓Joe修改的東西上傳到GitHub，但是Alice再去看GitHub就會發現她剛剛修改的東西全都不見了，這是因為都被Joe修改的內容給覆蓋掉。這絕不會是最好的做法，除非你想惹團隊其他人生氣。也是因為`git push -f`是相當危險的操作，所以前面介紹`git push`時才沒特別提，使用這個強制指令要三思啊。
+
+比較好的做法當然是第二個方法，先使用`git fetch`下載Alice修改的內容，透過`git merge`更新自己的本機儲存庫，最後使用`git push`把自己的東西上傳到GitHub。
+
+現在我們先在GitHub上修改檔案`README.md`，來模擬團隊中有人先一步上傳。請參考下面的圖片來修改`README.md`，修改好直接按下`Commit changes`即可。
+![other_first_push](other_first_push.png)
+
+現在我們修改`hello.c`，內容如下：
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(){
+	printf("Hello world!\n");
+
+	for(int i = 0; i < 5; i++){
+		printf("i: %d\n", i);
+	}	// End of for-loop
+	printf("Done!\n");
+
+	return 0;
+} // End of main
+```
+接著，把這次的修改提交出去：
+```bash
+$ git add .
+
+$ git commit -m "Update hello.c"
+[master 9c467c0] Update hello.c
+ 1 file changed, 2 insertions(+)
+```
+現在我們試試看使用`git push`來上傳剛剛的修改內容：
+```bash
+$ git push origin master
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+To github.com:burstknight/testGit.git
+ ! [rejected]        master -> master (fetch first)
+error: failed to push some refs to 'github.com:burstknight/testGit.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+hint: (e.g., 'git pull ...') before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+```
+看到了吧，上傳的動作被拒絕了。現在我們先更新自己的儲存庫：
+```bash
+$ git fetch
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), 664 bytes | 4.00 KiB/s, done.
+From github.com:burstknight/testGit
+   5dc2f1e..2a068a5  master     -> origin/master
+
+$ git merge origin/master
+Merge made by the 'recursive' strategy.
+ Readme.md | 1 +
+ 1 file changed, 1 insertion(+)
+```
+最後把我們自己修改的東西上傳上去：
+```bash
+$ git push origin master
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+Enumerating objects: 9, done.
+Counting objects: 100% (8/8), done.
+Delta compression using up to 16 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (5/5), 538 bytes | 538.00 KiB/s, done.
+Total 5 (delta 3), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (3/3), completed with 2 local objects.
+To github.com:burstknight/testGit.git
+   2a068a5..9fdd38f  master -> master
+```
+在更新我們自己的儲存庫以後，Git就允許我們把自己修改的東西上傳上去。
