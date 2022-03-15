@@ -1997,3 +1997,135 @@ ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCqDkYLFvuZr1HMYz3Fl/Wv2ALXabC/UM23dOlucJzj
 ```
 當然，你也可以使用像是Notepad++來讀這個檔案，只要記得檔案的路徑不要搞錯就沒問題。現在請把`id_rsa.pub`這個檔案的內容全部複製起來，記住要複製自己的，不要複製本文的。只要照著前面在GitHub的操作，應該會出現下面的畫面，請把`id_rsa.pb`的內容貼到`Key`下面那一欄，至於`Title`那欄可以隨便填，那只是方便我們管理每個金鑰用的。最後，只要按下`Add SSH key`就設定完成。
 ![set_ssh_key](set_ssh_key.png)
+
+#### 讓GitHub代管專案: `git clone`、`git remote`
+讓GitHub代管專案有兩種情況，根據這兩種情況，會有兩種對應的方式。接下來會好好說明這兩種情況，以及如何讓GitHub來代管。
+
+##### 直接從GitHub下載
+這個情況是指我們先在GitHub建好一個專案並且下載到自己的電腦上，或是在GitHub瀏覽時，剛好看到有人開發的專案很好用，就想下載來試試看。
+
+現在我們先在GitHub建一個專案，請先登入以後，在右上角使用者帳號旁邊的`+`，如下面圖所示：
+![new_repository_00](new_repository_00.png)
+
+在GitHub上也可以直接按左邊的`New`：
+![new_repository_01](new_repository_01.png)
+
+不管使用哪種方式，都會出現下面的畫面。現在來說明在這個畫面由上到下可以設定哪些東西：
+- Repository name: 設定儲存庫(專案)名稱，只要不要跟自己已有的儲存庫使用到相同的名稱都可以
+- Description: 用來簡單說明這個儲存庫的用途，這個可以不設定
+- Public or Private: 這個可以用點擊的方式設定儲存庫的開放權限，如果選擇`Public`，任何人都可以看到我們建立的儲存庫，而選擇`Private`，則只有自己以及得到權限的人才可以看得到
+- Initialize this repository with: 這邊用來初始化儲存庫，可依據自己的需求來設定，可選擇的有：
+  - Add a README file: 會建出README的說明文件，用來說明這個儲存庫的用途
+  - Add .gitignore: 會建出`.gitignore`，而且還可以依照自己的需要，讓GitHub使用預設的範本來把內容填進`.gitignore`中
+  - Choose a license: 這個會建出一個文件檔，用來說明其他人用這個專案時的使用範圍
+
+![create_repository](create_repository.png)
+
+這邊請先照著圖片中來設定專案，然後按下`Create repository`按鈕，就可以成功建出一個專案。這個時候會出現下面的畫面：
+![show_project](show_project.png)
+
+由於我們剛剛在建儲存庫時，初始化那邊沒要求GitHub產生README等檔案，所以才會顯示這個畫面。現在我們還是來說明如何下載專案，在這個圖片中紅框的部分可以設定傳輸的方式，根據選擇的不同，橘框顯示的路徑也會不同，這邊請選擇使用`SSH`來傳輸，稍後將會使用SSH傳輸所對應的路徑。
+
+接下來該來談談Git的指令了，我們可以使用下面的指令從GitHub下載儲存庫：
+```bash
+$ git clone <url>
+# url : 遠端儲存庫的路徑
+```
+這個指令使用起來很容易，只要把想下載的儲存庫的路徑當參數，就可以從GitHub上下載下來。現在我們先切換適當的目錄，使用這個指令，至於要選擇什麼要的目錄，只要自己覺得適合就好，但最好不會選在其他已經交給Git管控的目錄底下使用這個指令。
+```bash
+$ git clone git@github.com:burstknight/FirstProject.git
+Cloning into 'FirstProject'...
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+warning: You appear to have cloned an empty repository.
+```
+這邊要注意一點，如果前面使用`ssh-keygen`設定SSH金鑰時，有設定密碼，我們使用`git clone`下載時，會要求我們輸入密碼。由於這是空的儲存庫，所以在下載時會很快，假如是下載別人的儲存庫，有時會因為那個儲存庫的東西比較多，還有網路的關係，下載時會比較花時間。
+
+由於剛剛建儲存庫的過程中，沒要求GitHub放入README等檔案，會建出一個空的儲存庫。這跟已經有檔案儲存庫在GitHub呈現上不太一樣，所以接下來就以下載Git原始碼來當範例說明。請先進到[這個網站](https://github.com/git/git)。
+
+![clone_repository](clone_repository.png)
+
+來到Git儲存庫以後，可以點擊`Code`這個按鈕，這個時候就會跳出一個小的對話框。在圖中橘框部分就是可以讓我們取得儲存庫的路徑，這邊點選`SSH`，然後把對應於SSH的路徑複製下來，然後透過`git clone`下載下來：
+```bash
+$ git clone git@github.com:git/git.git
+Cloning into 'git'...
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+remote: Enumerating objects: 324687, done.
+remote: Counting objects: 100% (937/937), done.
+remote: Compressing objects: 100% (438/438), done.
+remote: Total 324687 (delta 607), reused 706 (delta 499), pack-reused 323750
+Receiving objects: 100% (324687/324687), 185.31 MiB | 9.94 MiB/s, done.
+Resolving deltas: 100% (242498/242498), done.
+Updating files: 100% (4079/4079), done.
+```
+畢竟Git從2005年開發到現在，儲存庫可能會比較龐大，所以下載時可能會需要一點時間。現在應該知道怎麼從GitHub上下載儲存庫了吧。
+
+##### 交給GitHub代管本機儲存庫
+有時只是想寫個小程式做個測試，也有時因為沒網路可用，只能使用指令`git init`在自己的電腦建出儲存庫來管理專案。後來想想應該把這些儲存庫放到GitHub，這個時候就可以使用本小節的方法。
+
+請參考上一小節的內容在GitHub建出一個不包含任何檔案的儲存庫`testGit`。
+![project_testGit](project_testGit.png)
+
+現在我們試著把從本文一開始就做的儲存庫`testGit`跟GitHub上的`testGit`連結起來。這邊要介紹一個指令可讓我們在本機中的儲存庫與GitHub連結起來：
+```bash
+$ git remote add <remote_name> <url>
+# <remote_name> : 遠端儲存庫的名稱
+# url           : 遠端儲存庫的路徑
+```
+比較需要提的是，`<remote_name>`代表了後面接的那串路徑，一般來說，`<remote_name>`習慣上都會使用`origin`，不過因為它只是讓我們不用職解使用遠端儲存庫的路徑，而是使用這個比較短的文字來跟遠端儲存庫同步，所以這個名稱可以隨意取。當然，如果用一陣子不喜歡當初取的名稱，也之後可以改，這個部分稍後再提。
+
+現在我們來使用這個指令來讓本機的`testGit`與GitHub上的儲存庫連結起來：
+```bash
+$ git remote add git@github.com:burstknight/testGit.git
+```
+現在我們來確認看看本機的儲存庫`testGit`是否跟GitHub上面的儲存庫連結上了。可以使用下面的指令來確認：
+```bash
+$ git remote -v
+# -v  : 用來顯示所有遠端儲存庫
+
+$ git remote -v
+origin  git@github.com:burstknight/testGit.git (fetch)
+origin  git@github.com:burstknight/testGit.git (push)
+```
+當我們使用`git remote -v`就可以查看本機儲存庫中所有的遠端儲存庫。這邊要稍微解釋一下，`git remote -v`回報的訊息一定是兩行為一組，這兩行最右邊圓括號的`fetch`與`push`分別代表我們下載與上傳的路徑設定。
+
+接下來介紹一下兩個比較進階的用法。剛剛有提到，使用`git remote add`可以讓本機的儲存庫與遠端儲存庫連結起來，也有提到遠端儲存庫的名稱可以更改，這邊就來說明遺下該如何修改：
+```bash
+$ git remote rename <old_remote_name> <new_remote_name>
+# <old_remote_name> : 舊的遠端儲存庫的名稱
+# <new_remote_name> : 新的遠端儲存庫的名稱
+
+
+# 再新增一個遠端儲存庫來測試重新命名
+$ git remote add github git@github.com:burstknight/testGit.git
+
+$ git remote -v
+github  git@github.com:burstknight/testGit.git (fetch)
+github  git@github.com:burstknight/testGit.git (push)
+origin  git@github.com:burstknight/testGit.git (fetch)
+origin  git@github.com:burstknight/testGit.git (push)
+
+$ git remote rename github hello
+
+$ git remote -v
+hello   git@github.com:burstknight/testGit.git (fetch)
+hello   git@github.com:burstknight/testGit.git (push)
+origin  git@github.com:burstknight/testGit.git (fetch)
+origin  git@github.com:burstknight/testGit.git (push)
+```
+對遠端儲存庫名稱重新命名很容易，只要使用`git rename`就可以達成。現在來說明一下剛剛的範例，首先我們使用`git remote add`新增一個遠端儲存庫，名稱使用`github`，並且使用`git remote rename`把遠端儲存庫的名稱`github`改成`hello`，而且在使用`git remote rename`前後透過`git remote -v`確認是否成功把遠端儲存庫`github`改名。
+
+我們來試試看把剛剛新增的儲存庫移除掉，可以使用下面的指令來達成：
+```bash
+$ git remote remove <remote_name>
+# <remote_name> : 欲刪除遠端儲存庫的名稱
+
+
+$ git remote remove hello
+
+$ git remote -v
+origin  git@github.com:burstknight/testGit.git (fetch)
+origin  git@github.com:burstknight/testGit.git (push)
+```
+`git remote remove`可以把遠端儲存庫從本機的儲存庫中移除，不過這只是解決連結，實際上並不會刪掉在GitHub上的儲存庫。
+
+最後，要提醒一下，使用`git remote add`只是把本機的儲存庫與遠端儲存庫連結起來。做完這個小節的範例以後，如果你用網頁瀏覽器看GitHub的儲存庫，會發現那上面的儲存庫還是空的，這是因為到目前為止都還沒把本機儲存庫同步到遠端儲存庫的緣故。後面提到`git push`和`git fetch`，這兩個指令可以幫我們同步。
