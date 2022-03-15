@@ -2129,3 +2129,154 @@ origin  git@github.com:burstknight/testGit.git (push)
 `git remote remove`可以把遠端儲存庫從本機的儲存庫中移除，不過這只是解決連結，實際上並不會刪掉在GitHub上的儲存庫。
 
 最後，要提醒一下，使用`git remote add`只是把本機的儲存庫與遠端儲存庫連結起來。做完這個小節的範例以後，如果你用網頁瀏覽器看GitHub的儲存庫，會發現那上面的儲存庫還是空的，這是因為到目前為止都還沒把本機儲存庫同步到遠端儲存庫的緣故。後面提到`git push`和`git fetch`，這兩個指令可以幫我們同步。
+
+#### 上傳至GitHub: `git push`
+現在來介紹指令`git push`，這個指令的功能為把本機儲存庫中的分支上傳到遠端儲存庫上。在遠端協作中，這是最常用的指令之一，這個指令的用法如下：
+```bash
+$ git push [-d] <remote_name> [<local_branch>:]<remote_branch>
+# -d  : 刪除遠端儲存庫的分支
+# <remote_name>   : 遠端儲存庫名稱
+# <local_branch>  : 本機儲存庫的分支，若與遠端儲存庫分支相同名稱，可以標明
+# <remote_branch> : 遠端儲存庫的分支
+```
+如果只用`git push`，只會把目前所使用的分支的修改紀錄都上傳到遠端儲存庫。此外，假如本機儲存庫的分支與遠端儲存庫的分支使用相同的名稱，可以省略掉`<local_branch>:`。若使用`git push -d`則是把遠端儲存庫的分支刪除掉。切記，使用`git push`上傳時，請不要使用`git push <remote_name> :<remote_branch>`，重點是那個`:`符號，這個指令可以解釋成把空的分支上傳到上去，並且對應於遠端分支`<remote_branch>`，這相當於使用`git push -d`刪除遠端分支。
+
+我們來試著把分支`master`上傳到GitHub：
+```bash
+$ git checkout master
+Already on 'master'
+
+$ git push origin master
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+Enumerating objects: 36, done.
+Counting objects: 100% (36/36), done.
+Delta compression using up to 16 threads
+Compressing objects: 100% (29/29), done.
+Writing objects: 100% (36/36), 3.22 KiB | 824.00 KiB/s, done.
+Total 36 (delta 9), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (9/9), done.
+To github.com:burstknight/testGit.git
+ * [new branch]      master -> master
+```
+在這個範例中，會先使用`git checkout`是為了確保已經在分支`master`。當我們使用`git push`時，假如之前設定SSH金鑰時有設定密碼，在這邊上傳的過程中就會要求我們輸入密碼。由於遠端儲存庫中不存在分支`master`，所以在上傳的過程中會幫我們在遠端儲存庫建出分支，然後把本機儲存庫的分支`master`所有的修改紀錄都會上傳上去。如果我們用網頁瀏覽器去看儲存庫`testGit`，就會發現剛剛的操作真的上傳成功。還要提醒一下，假如網頁瀏覽器到剛剛上傳為止都停留在儲存庫`testGit`，請按F5鍵更新一下，因為即使GitHub已經收到上傳的東西，也不會主動幫我們更新網頁瀏覽器的畫面。
+
+這邊還有一點要提一下，當我們使用`git push`或後面提到的`git fetch`同步儲存庫時，Git會在本機儲存庫中做出遠端儲存庫的分支。這麼做是為了讓我們可以確認在本機儲存庫是否已經更新到遠端儲存庫中。確認的方式為使用指令`git log`：
+```bash
+$ git log --graph
+* commit 464fb14f19a5525a97b1042a444f15e6f7efc71f (HEAD -> master, origin/master)
+| Author: Joe <joe@email.tw>
+| Date:   Fri Mar 11 17:08:40 2022 +0800
+|
+|     Update color.txt
+|
+* commit 9497eaf1fba0313a9f2b35fa78911711d1029b9a (tag: show, tag: light-tag, tag: cat, tag: ann-tag)
+| Author: Joe <joe@email.tw>
+| Date:   Thu Mar 10 17:13:14 2022 +0800
+|
+|     Update hello.c
+|
+* commit 64becd2ed4ee1d24854df55a3bcf3bdea52dce04
+| Author: Joe <joe@email.tw>
+| Date:   Thu Mar 3 17:48:19 2022 +0800
+|
+|     Add hello.c
+|
+*   commit 65e497e3b11e3bcc75aa9c8799c0df017cc754fa
+|\  Merge: 8d0a25f 90bdb96
+| | Author: Joe <joe@email.tw>
+:
+# 以下省略
+```
+在我們使用`git push`之前，最新的修改紀錄中只有分支`master`。可是在我們上傳完以後，就多了一個分支`origin/master`，這個就是遠端儲存庫的分支，其中那個`origin`就是在本機中遠端儲存庫的名稱。
+
+現在來談談刪除遠端儲存庫的分支。前面有提到可以使用`git push -d`來刪除遠端儲存庫的分支，當然這個分支必須是存在的。我們來想像一個情境來搭配`git push -d`來使用，首先我們上傳分支`test`：
+```bash
+$ git checkout test
+Switched to branch 'test'
+
+$ git push origin test
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
+remote:
+remote: Create a pull request for 'test' on GitHub by visiting:
+remote:      https://github.com/burstknight/testGit/pull/new/test
+remote:
+To github.com:burstknight/testGit.git
+ * [new branch]      test -> test
+
+$ git log
+commit 90bdb96a6e365605d127f985cc6ddec765a23845 (HEAD -> test, origin/test)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:33:22 2022 +0800
+
+    Add color.txt
+
+commit e878e12d1b408d8df3e85464b4cd748e8fc1db4d
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:31:50 2022 +0800
+
+    Add new.txt
+
+commit 8d0a25fc3a80cf1bea78003c7df1697dc4ea3855
+Author: Joe <joe@email.tw>
+Date:   Mon Feb 21 17:04:12 2022 +0800
+
+    Add test.txt
+
+commit 7f707c650e3b3c9cafeebbc63f309a04057e542d
+Author: Joe <joe@email.tw>
+Date:   Fri Feb 18 10:43:01 2022 +0800
+
+    Add .gitignore
+:
+# 以下省略
+```
+在上傳完以後，用`git log`確認剛剛上傳成功。這個時候去用網頁瀏覽器看儲存庫，會發現多了一個分支`test`。假設我們希望遠端儲存庫的分支`test`改成其他名稱，比方說是`car`。在這種情況下，我們先把遠端分支`test`刪除掉：
+```bash
+$ git push -d origin test
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+To github.com:burstknight/testGit.git
+ - [deleted]         test
+
+$ git log
+commit 90bdb96a6e365605d127f985cc6ddec765a23845 (HEAD -> test)
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:33:22 2022 +0800
+
+    Add color.txt
+
+commit e878e12d1b408d8df3e85464b4cd748e8fc1db4d
+Author: Joe <joe@email.tw>
+Date:   Thu Mar 3 15:31:50 2022 +0800
+
+    Add new.txt
+
+commit 8d0a25fc3a80cf1bea78003c7df1697dc4ea3855
+Author: Joe <joe@email.tw>
+Date:   Mon Feb 21 17:04:12 2022 +0800
+
+    Add test.txt
+
+commit 7f707c650e3b3c9cafeebbc63f309a04057e542d
+Author: Joe <joe@email.tw>
+Date:   Fri Feb 18 10:43:01 2022 +0800
+
+    Add .gitignore
+:
+# 以下省略
+```
+當我們刪除遠端儲存庫的分支`test`時，再去察看一次歷史紀錄，會發現遠端分支`origin/test`消失了。當然，GitHub上的儲存庫也不存在分支`test`。接著，我們再上傳一次，可是這次遠遠端分支名稱是`car`：
+```bash
+$ git push origin test:car
+Enter passphrase for key '/c/Users/JH-06/.ssh/id_rsa':
+Total 0 (delta 0), reused 0 (delta 0), pack-reused 0
+remote:
+remote: Create a pull request for 'car' on GitHub by visiting:
+remote:      https://github.com/burstknight/testGit/pull/new/car
+remote:
+To github.com:burstknight/testGit.git
+ * [new branch]      test -> car
+```
+假如去看GitHub的儲存庫，會發現多了一個分支`car`。這裡要注意，之前使用`git push`上傳時，由於本機儲存庫的分支與遠端儲存庫的分支的名稱相同，所以只需要在這個指令後面直接輸入跟欲上傳分支相同名稱即可。然而，這次上傳分支`test`在遠端儲存庫中對應於分支`car`，而且遠端分支`car`不存在，所以後面才要用`:`來做個對應。
+
+一般來說，像剛剛那個範例比較不會使用，因為還要記得本機儲存庫的分支對應到遠端儲存庫的哪一個分支，用起來也比較麻煩。如果要重新命名遠端分支，建議先使用`git branch -m`把本機儲存庫的分支更改名稱，然後再把遠端儲存庫那個舊的分支刪掉，最後才使用`git push`上傳更改後的分支到GitHub上。

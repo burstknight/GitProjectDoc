@@ -27,6 +27,7 @@ This document is to log all changes for this project.
 - Update `git_tutorial/README.md` to introduct tag.
 - Update `git_tutorial/README.md` to show how to generate SSH key.
 - Update `git_tutorial/README.md` to show how to link remote repositories.
+- Update `git_tutorial/README.md` to show how to upload branch to server.
 
 ### Changed
 - Add more context for `ORIG_HEAD` in `git_tutorial/README.md`.
