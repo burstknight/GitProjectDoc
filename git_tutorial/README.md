@@ -2446,3 +2446,118 @@ To github.com:burstknight/testGit.git
    2a068a5..9fdd38f  master -> master
 ```
 在更新我們自己的儲存庫以後，Git就允許我們把自己修改的東西上傳上去。
+
+#### 為開源專案貢獻心力
+在GitHub上有非常多開源的專案，這些專案不僅允許我們拿來使用，還可以修改原始碼。我們在使用那些開源的專案時，可能為了自己的需要增加一些功能，或是修正了原作者沒注意到的BUG。也許你會想回饋一下，本章節主要來探討這個部分。
+
+##### Fork他人的專案
+第一件要做的事就是**Fork**他人的專案，這裡的Fork可以想成從別人的帳號中複製一份專案到自己的帳號中。這邊解釋一下，為什麼在GitHub上用**Fork**來代表複製他人的專案。Fork的中文就是叉子，你可以想像成一個專案像叉子那樣分岔出來，其中一條就是你複製過來的東西。
+
+我解釋一下為什麼要這麼做，想像一下你正在維護一個很重要的專案，假如有個人下載了你的專案，並且在他自己的電腦修改這個專案。你並不認識這個人，假如他上傳他修改的東西，你應該會擔心他上傳的東西會不會塞了些有問題的程式碼。因此，你應該在你自己的專案中設定權限，不讓其他人隨意亂動你的專案。可是假如這個人是真心想幫你忙，那該怎麼辦呢？
+
+這個人應該要先用Fork把你的專案複製一份到他的帳號中。他在自己的專案中有完整的權限，他可以不受任何限制做任何事情。至於他要如何把他修改的東西傳給你，這部分稍後再提。
+
+
+為了說明本章節的作法，我在GitHub上另外建了一個帳號，然後我使用這個新帳號登入。在Fork之前，第一步當然是在GitHub尋找想要的專案。下面的圖片就是我在GitHub上找到的。由於我不是使用`burstknight`這個帳號瀏覽這個專案`testGit`，所以對這個專案而言，我所使用的帳號只是個訪客，我並不擁有這個專案。這個時候會發現下面圖片紅框的按鈕可以按，只要按下去就可以把這個專案複製到我所使用的帳號中。
+![search_project](search_project.png)
+
+當我們按下`fork`按鈕時，就會出現下面的畫面。這個畫面會持續一小段時間，這代表著GitHub幫我們複製專案過來。
+![forking_project](forking_project.png)
+
+當複製完，就會出現下面的畫面，這代表我們複製成功了。當我們複製過來以後，左上角會一段文字，也就是下面圖片中紅框的部分，那段文字說明我們擁有的這個專案是從誰那邊複製過來，而且我們還可以點擊那個超連結去瀏覽原作者的專案。
+![forked_project](forked_project.png)
+
+到這邊Fork專案就算完成了。這個複製過來的專案是屬於我們自己的，所以我們有完整的權限可以做任何事情，不管是要修改檔案或是刪除檔案，都跟原作者無關。
+
+##### Pull Request給原作者
+現在我們來展示該怎麼把自己修改的東西交給原作者，這個動作稱為PR(Pull Request)。第一步當然是先把剛剛Fork過來的專案Clone下來修改。
+```bash
+$ git clone git@github.com:u0651801/testGit.git
+Cloning into 'testGit'...
+remote: Enumerating objects: 47, done.
+remote: Counting objects: 100% (47/47), done.
+remote: Compressing objects: 100% (26/26), done.
+remote: Total 47 (delta 14), reused 41 (delta 12), pack-reused 0
+Receiving objects: 100% (47/47), 4.90 KiB | 264.00 KiB/s, done.
+Resolving deltas: 100% (14/14), done.
+```
+既然下載完，就開始編輯這個專案。我就在這個專案中新增檔案`test_net.sh`，內容如下：
+```sh
+echo "We will test network!"
+ping -c 10 8.8.8.8
+```
+接著，把剛剛編輯好的檔案提交出去，然後上傳到GitHub：
+```bash
+$ git add .
+
+$ git commit -m "Add test_net.sh"
+[master 8b94706] Add test_net.sh
+ 1 file changed, 2 insertions(+)
+ create mode 100644 test_net.sh
+```
+回到GitHub上，如下面的畫面，會多了剛剛上傳的檔案。按下綠框的`Pull requests`準備把剛剛修改的東西送給原作者。
+![pull_request_00](pull_request_00.png)
+
+這個時候會進入下面的畫面，只要按下`New pull request`就可以準備PR給原作者。
+![pull_request_01](pull_request_01.png)
+
+接下來會出現下面的畫面，在這個畫面中最下面的訊息顯示剛剛上傳的東西。比較需要注意的是，橘框和藍框，這兩者分別代表原作者專案的分支與我們自己專案的分支。這兩個設定用來控制我們PR給原作者的專案以後，會跟原作者專案哪一個分支合併。當然，如果都沒什麼問題，也可以直接使用預設值。只要確認都沒什麼問題，那就按下`Create pull request`。
+![pull_request_02](pull_request_02.png)
+
+我們會進入一個畫面，如下面的圖片所示。這算是PR的最後一步，我們需要填入一些訊息，來告訴原作者我們做了哪些事情，讓他自行判斷要怎麼把我們PR給他的東西整合起來。圖片中紅框是填寫標題，通常用簡單的一串文字說明我們做了什麼事，下面的黃框則是讓我們用更詳細的文字交代清楚。確定沒問題，就可以按下`Create pull request`的按鈕。
+![pull_request_03](pull_request_03.png)
+
+稍微等個幾秒鐘，就會出現下面的畫面，這代表我們PR成功。不過到目前為止，也只是把我們自己的東西PR過去，實際上原作者要不要用，決定權在他。
+![pull_request_04](pull_request_04.png)
+
+我們切換帳號看看原作者這邊會發生什麼事。從下面的圖片中，可以發現`Pull requests`顯示數字1，這代表有人PR過來，點進去看看有什麼吧。
+![pull_request_05](pull_request_05.png)
+
+接著會出現下面的畫面，這是一個列表，它會顯示其他人PR過來的東西。看到了吧，這裡面有剛剛用另一個帳號PR過來的東西。我們可以點選進去看看別人PR過來什麼東西。
+![pull_request06](pull_request_06.png)
+
+會出現下面這個畫面，我們可以查看這個PR過來的訊息，以及PR過來的人都做了哪些事。我們可以在這個畫面中用滑鼠點選的方式，查看每個檔案修改的壯狀況。如果確定沒什麼問題，可以按下`Merge pull request`按鈕。
+![pull_request07](pull_request_07.png)
+
+GitHub會出現下面的畫面，這個是要我們確認是否要整合起來。當然，也可以在這邊多寫些訊息，以後查閱時會比較容易讀懂。如果都沒問題，就按下`Confirm merge`。
+![pull_request08](pull_request_08.png)
+
+之後會出現下面的畫面，這代表把剛剛PR過來的東西合併過來。回到專案就會發現，剛剛PR中的檔案也加進來。
+![pull_request09](pull_request_09.png)
+
+##### 追上原作者的進度
+我們透過Fork複製別人的專案到自己的帳號中。當我們使用這個專案的過程中，說不定原作者還會持續維護他的專案，他可能修正了幾個比較麻煩的BUG，也可能實作了我們想要的新功能。那麼，我們該如何取得原作者最新的修改進度呢？
+
+解決這個問題的方法有兩個：
+1. 先把那個專案刪掉，再Fork一次，然後重新下載下來
+2. 在本機儲存庫中建立連結到原作者的專案，然後把原作者的東西抓下來跟自己的整合起來
+
+第一種方法是砍掉重練，簡單暴力，不過不太推薦。比較好的方法是第二個，這邊就大概說明一下。首先，需要設定遠端節點，讓本機專案可以跟原作者的專案連結：
+```bash
+$ git remote add burstknight git@github.com:burstknight/testGit.git
+
+$ git remote -v
+burstknight     git@github.com:burstknight/testGit.git (fetch)
+burstknight     git@github.com:burstknight/testGit.git (push)
+origin  git@github.com:u0651801/testGit.git (fetch)
+origin  git@github.com:u0651801/testGit.git (push)
+```
+使用`git remote add`設定好以後，再使用`git remote -v`確認一下，會發現我們的本機專案已經跟原作者的專案連結上了。接下來就是把原作者的專案下載下來：
+```bash
+$ git fetch burstknight
+remote: Enumerating objects: 1, done.
+remote: Counting objects: 100% (1/1), done.
+remote: Total 1 (delta 0), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (1/1), 632 bytes | 10.00 KiB/s, done.
+From github.com:burstknight/testGit
+ * [new branch]      car        -> burstknight/car
+ * [new branch]      master     -> burstknight/master
+ * [new branch]      test       -> burstknight/test
+```
+現在我們已經有了原作者修改的最新進度，如果有需要，可以使用`git merge`來合併過來更新：
+```bash
+$ git merge burstknight/master
+Updating 8b94706..308ce3f
+Fast-forward
+```
+最後一步就看個人的需要了。我們的本機專案已經追上原作者開發的最新進度了，但是我們在GitHub上的專案還沒更新。如果想要更新GitHub，就使用`git push`上傳。也許你已經注意到了，本小節的每個步驟就是[該如何解決有時無法上傳到GitHub](#該如何解決有時無法上傳到GitHub)。
