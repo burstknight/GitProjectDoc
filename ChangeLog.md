@@ -31,6 +31,7 @@ This document is to log all changes for this project.
 - Update `git_tutorial/README.md` to show how to update local repository.
 - Update `git_tutorial/README.md` to show how to solve push problem.
 - Update `git_tutorial/README.md` to show how to collaborate with other users in GitHub.
+- Update `git_tutorial/README.md` to show how to create private git server on disk.
 
 ### Changed
 - Add more context for `ORIG_HEAD` in `git_tutorial/README.md`.

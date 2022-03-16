@@ -2561,3 +2561,115 @@ Updating 8b94706..308ce3f
 Fast-forward
 ```
 最後一步就看個人的需要了。我們的本機專案已經追上原作者開發的最新進度了，但是我們在GitHub上的專案還沒更新。如果想要更新GitHub，就使用`git push`上傳。也許你已經注意到了，本小節的每個步驟就是[該如何解決有時無法上傳到GitHub](#該如何解決有時無法上傳到GitHub)。
+
+### 架設自己的Git伺服器
+我們可以在GitHub建立專案時，可以選擇Public或是Private，前者允許任何人閱覽與使用，而後者僅能讓自己和少數幾個有權限的人使用。有時我們開發的專案不能公開，這個時候可以在GitHub上建立Private的專案，但是GitHub對Private專案有一些限制。那麼，我們可不可以自己做一個類似GitHub的私人協作平台呢？
+
+答案是可以的。前面介紹GitHub時有說過，GitHub本身就是一個伺服器。網路上只要用`Git 伺服器`或`Git server`當關鍵字就可以找到很多方法。這邊推薦兩個方法：
+1. [gitea](https://gitea.io/zh-tw/)
+2. 直接在自己的硬碟上建遠端儲存庫
+
+第一個方法是使用gitea這個程式，它是用Go語言寫成，而且有中文介面，架設上也相當容易。關於如何使用gitea怎麼架設，如果未來時間允許我也許會寫這部分的內容。這邊先著重在第二個方法，而且這個方法比第一個方法更簡單，也不需要額外安裝程式。
+
+#### 在自己的硬碟上建遠端儲存庫
+這個架設方法的需求很小，只要電腦有安裝Git即可。除此之外，這個方法甚至不需要網路，只要硬碟還有空間就可以使用，不過Git會把管控專案中的檔案壓縮，所以實際上硬碟空間的要求也不會太嚴格。
+
+現在來說明該怎麼在自己的電腦中建立遠端儲存庫，我們先在D槽中建一個目錄`repository`，用來放遠端儲存庫：
+```bash
+# 確認當前目錄是否在D槽
+$ pwd
+/d
+
+# 建立目錄repository
+$ mkdir repository
+
+# 進入目錄repository
+$ cd repository
+
+# 確認是否進入目錄repository
+$ pwd
+/d/repository
+```
+建好目錄`repository`以後，就用`cd`進入該目錄中。現在我們可以建立遠端儲存庫了，方法是`git init`，你沒看錯，就是用這個指令，只是後面要接一個參數`--bare`。至於建立遠端儲存庫的名稱，原則上是專案的名稱，加上`.git`。我們來試著建`testGit`的遠端儲存庫：
+```bash
+$ git init --bare testGit.git
+Initialized empty Git repository in D:/repository/testGit.git/
+
+$ ls -l
+total 4
+drwxr-xr-x 1 JH-06 197121 0 Mar 16 15:54 testGit.git/
+```
+使用上面的指令以後，目錄`repository`中就會多一個資料夾`testGit.git`，這個就是剛剛建好的遠端儲存庫。當然，你也可以先用`mkdir`建出資料夾`testGit.git`，接著使用`cd`進入該資料夾中，然後使用`git init --bare`初始化。
+
+接下來說明`git init`與`git init --bare`之間的差別。`git init`會對一個目錄變成有工作區的Git儲存庫，我們可以在這個目錄底下編輯檔案，除了隱藏目錄`.git`。然而，`git init --bare`會對一個目錄做成**沒有工作區**的裸儲存庫，也就是說在這個目錄底下不能編輯任何檔案。如果你看了剛剛建的目錄`testGit.git`，會發現裡面的東西很像是使用`git init`初始化以後產生的目錄`.git`裡面的東西。因此，透過`git init --bare`初始化的目錄，只能透過Git的指令來管理那裡面的檔案。
+
+順帶一提，`git clone`也有參數`--bare`，這個也是用來下載儲存庫，只是它會下載裸的儲存庫。當然，下載這種儲存庫就不能直接修改那裡面的檔案。有興趣的話，你可以試試看`git init --bare`去下載剛剛建的`testGit.git`。
+
+現在該談談路徑了，不管是使用`git clone`或是`git remote`這類指令，都需要遠端儲存庫的路徑。我們需要先進入遠端儲存庫中，然後使用`pwd`卻得當前的路徑：
+```bash
+$ cd testGit.git
+
+$ pwd
+/d/repository/testGit.git
+```
+`pwd`就是我們要的遠端儲存庫的路徑，只要把它複製起來，就可以設定本機儲存庫：
+```bash
+# 新增遠端節點
+$ git remote add local /d/repository/testGit.git
+
+# 查看遠端節點
+$ git remote -v
+local   D:/repository/testGit.git (fetch)
+local   D:/repository/testGit.git (push)
+origin  git@github.com:burstknight/testGit.git (fetch)
+origin  git@github.com:burstknight/testGit.git (push)
+
+# 上傳分支master
+$ git push local master
+Enumerating objects: 47, done.
+Counting objects: 100% (47/47), done.
+Delta compression using up to 16 threads
+Compressing objects: 100% (38/38), done.
+Writing objects: 100% (47/47), 4.88 KiB | 1.22 MiB/s, done.
+Total 47 (delta 14), reused 0 (delta 0), pack-reused 0
+To D:/repository/testGit.git
+ * [new branch]      master -> master
+```
+我們透過`git remote add`增加遠端節點，也可以從`git remote -v`確認剛剛的設定都成功。這邊要提醒一下，在Windows上，遠端儲存庫的路徑除了可以透過Git附的Bash終端機的指令`pwd`來取得以外，還可以透過Windows的CMD指令和檔案總管來取得，但是記得拿到的路徑中必須把符號`\`改成`/`才行。這是因為在Windows中路徑用`\`來當分層的切割符號，但是在Linux中路徑使用的符號是`/`，Git就是採用Linux的方法來處理路徑。如果你沒注意的話，使用`git push`和`git fetch`可能會失敗，並且得到遠端路徑有問題的錯誤訊息。
+
+我們依然可以使用`git push`上傳到遠端儲存庫，只是這個遠端儲存庫是放在我們自己的硬碟中。由於我們用這種方式建立遠端儲存庫沒搞一個HTTPS和SSH，所以傳輸的過程中Git不會要求我們輸入密碼。此外，我們透過`git push`或`git fetch`同步時，資料都是在電腦的內部網路上傳輸，所以速度非常快，而且即使電腦沒連上網際網路也可以使用。
+
+到這邊你已經知道了該怎麼在自己的電腦中建遠端儲存庫。假設你需要異地備份，你可以買顆行動硬碟或是隨身碟，用前面說的方法在行動硬碟或隨身碟上建出遠端儲存庫。這種情況下，也許你會遇到一個小問題，那就是行動硬碟和隨身碟每次插到電腦上，磁碟代號可能會不一樣，比方說上次是E槽，這次卻是F槽，這個時候遠端儲存庫的路徑就不會都一樣。
+
+這裡有兩個方法可以解決，第一個方法是先用`git remote remove`把那個遠端節點刪掉，然後使用`git remote add`重新設定。第二種方法是使用下面的指令：
+```bash
+# 修改遠端路徑
+$ git remote set-url <remote_name> <new_url>
+# <remote_name> : 遠端儲存庫的名稱
+# <new_url>     : 遠端儲存庫的路徑
+```
+這個指令接的路徑也可以是GitHub上的路徑。這邊也示範一下怎麼使用這個指令，首先我在目錄`repository`中再建一個資料夾`fox`，然後把`testGit.git`複製到那個資料夾裡面。現在我們來切換遠端路徑：
+```bash
+$ git remote set-url local /d/repository/fox/testGit.git
+
+# 查看遠端節點
+$ git remote -v
+local   D:/repository/fox/testGit.git (fetch)
+local   D:/repository/fox/testGit.git (push)
+origin  git@github.com:burstknight/testGit.git (fetch)
+origin  git@github.com:burstknight/testGit.git (push)
+
+# 即使修改了遠端儲存庫，也可以上傳
+$ git push local
+Enumerating objects: 47, done.
+Counting objects: 100% (47/47), done.
+Delta compression using up to 16 threads
+Compressing objects: 100% (38/38), done.
+Writing objects: 100% (47/47), 4.88 KiB | 1.22 MiB/s, done.
+Total 47 (delta 14), reused 0 (delta 0), pack-reused 0
+To D:/repository/fox/testGit.git
+ * [new branch]      master -> master
+```
+我們修改遠端路徑，也可以使用`git push`上傳東西。只不過因為我是使用複製的遠端儲存庫，所以其實上傳的東西會傳到`D:/repository/fox/testGit.git`這個路徑的遠端儲存庫，而不是`D:/repository/testGit.git`的儲存庫。
+
+最後要提的是，假如你的Google雲端硬碟的空間夠用的話，你也可以把遠端儲存庫建在那上面。具體做法是先安裝[Google雲端的電腦版程式](https://www.google.com.tw/intl/zh-TW_ALL/drive/download/)，然後使用檔案總管進入Google雲端硬碟中，在裡面用剛剛說的方法建出遠端儲存庫。然而，要注意一點，這個方法只適用於Windows。
