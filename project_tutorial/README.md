@@ -77,3 +77,28 @@ doc: Remove useless comments
 
 The comments cannot offer usalful information, so I remove them.
 ```
+
+## 設定提交訊息的樣板
+前一章提過使用一些規範來提交訊息，讓團隊其他成員只要閱讀歷史紀錄就可以很快進入狀況。剛使用前一章的內容來提交訊息，應該會覺得要記憶這麼多事情很麻煩，那麼有沒有什麼方法可以輔助我們呢？
+
+我們可以先建一個樣板，裡面先寫好提交訊息的格式，然後設定專案在使用`git commit`就會把這個樣板讀進來。這邊提供一個簡單的範例：
+```
+#feat/fix/remove/doc
+#:
+
+# Why is it necessary? (Bug fix? Add new functions?)
+#-
+
+#[issue #id]
+```
+那個符號`#`代表註解，所以當我們編輯完訊息，Git不會處理那些用`#`後面的文字。假設這個檔案命名為`git_commit_template`，然後這個檔案放在目錄`~`中，其中`~`這個目錄在Linux中是指使用者的家目錄，在Windows中則是`C:\Users\{user}`，這個`{user}`就是你所使用的帳號。其實這個檔案可以放在任何地方，只要你找得到就沒什麼問題。現在我們試著在專案`testGit`中，設定使用這個樣板檔案，我們所使用的指令如下：
+```bash
+$ git config commit.template <template_path>
+# <template_path>   :   樣板檔案的路徑
+
+$ git config commit.template ~/git_commit_template
+
+```
+我們只要在指令`git config commit.template`後面接上樣板檔案的所在路徑即可。
+
+如果有使用VIM，就會知道可以在編輯模式下按`Ctrl`與`N`來自動補齊。只要預先設定好樣板，以後在使用`git commit`就會非常有效率。
