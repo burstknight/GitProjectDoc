@@ -6,3 +6,6 @@
 ## 教學指南
 - [Git 使用教學](./git_tutorial/README.md)
 - [專案管理指南](project_tutorial/README.md)
+
+## 參考資料
+- [Git Commit Message 這樣寫會更好，替專案引入規範與範例](https://wadehuanglearning.blogspot.com/2019/05/commit-commit-commit-why-what-commit.html)
