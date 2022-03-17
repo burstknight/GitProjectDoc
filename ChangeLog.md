@@ -35,6 +35,7 @@ This document is to log all changes for this project.
 - Add the direcotry `project_tutorial` to store tutorial document.
 - Update `project_tutorial` to introduct commit format.
 - Update `project_tutorial` to show how to set commit template.
+- Update `project_tutorial` to introduct git flow.
 
 ### Changed
 - Add more context for `ORIG_HEAD` in `git_tutorial/README.md`.
