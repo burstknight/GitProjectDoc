@@ -36,6 +36,7 @@ This document is to log all changes for this project.
 - Update `project_tutorial` to introduct commit format.
 - Update `project_tutorial` to show how to set commit template.
 - Update `project_tutorial` to introduct git flow.
+- Update `project_tutorial` to introduct the rule of name for variable and functions.
 
 ### Changed
 - Add more context for `ORIG_HEAD` in `git_tutorial/README.md`.

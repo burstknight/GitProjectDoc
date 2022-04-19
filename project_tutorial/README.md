@@ -129,3 +129,160 @@ Git Flow透過定義分支的用途，來建議怎麼開發一個專案。在維
 一般來說都是從分支`master`分出分支`hotfix`來修復這些比較緊急的錯誤。我們會從分支`master`分出來，而不是從分支`develop`分出來的原因是，分支`develop`可能還在開發新功能，這些剛實作的新功能可能還不穩定。如果我們直接從分支`develop`分出來修復那些緊急的錯誤，就需要多花些心思留意那些新功能。然而，分支`master`大部分功能都已經在之前測試過了，相對於分支`develop`來說比較穩定。因此，從分支`master`分出來就可以專注處理那些錯誤。
 
 當我們在這個分支修正完所有的錯誤時，就會把這個分支合併回分支`master`。我們也要把這個分支hotfix也合併到分支`develop`，因為這些錯誤也都是從`develop`一併同步到分支`master`，所以才需要透過把分支`hotfix`合併到分支`develop`，否則以後分支`develop`準備要釋出正式版時，那些曾經修復過的錯誤又會發生。
+
+## 變數與函式命名規則
+當有多人共同維護同一個專案時，最好能遵守命名規則來對專案中每個變數、函式命名，未來有新成員接手，或是團隊其他成員需要修改或閱覽不是他自己編輯的程式碼時，比較能進入狀況。
+
+### 駝峰式大小寫
+[駝峰式大小寫(Camel Case)](https://zh.wikipedia.org/wiki/%E9%A7%9D%E5%B3%B0%E5%BC%8F%E5%A4%A7%E5%B0%8F%E5%AF%AB)在為變數和函式命名時很好用，而且這套命名規則可以讓變數與函式變得更易於閱讀。這個命名規則的用法為，當變數與函式的名稱是由二個或多個英文單字連結起來時，每個單字的字首以大寫表示，其餘的字母則以小寫表示。
+
+#### 小駝峰式命名法(Lower Camel Case)
+這個命名規則是變數或函式的名稱中的第一個單字的字首以小寫字母表示，其餘單字的字首則以大寫表示。舉例來說，假設有個變數示用來儲存一個人的姓氏，該變數可以這樣命名：`lastName`。
+
+#### 大駝峰式命名法(Upper Camel Case)
+這個命名規則是指變數或函示的名稱中所有單字的字首都以大寫字母來表示。若以前面的例子來說明，用來儲存一個人姓氏的變數名稱可以這樣命名：`LastName`。
+
+### 變數命名規則
+變數最好以小駝峰式命名法來命名，而且為了能夠可以在第一眼辨認出變數的型態，應該在字首部分多加一個字母用以表示該變數的型態。此外，變數的名稱最好使用名詞，也可與形容詞搭配命名。
+
+下表是每個型態對應的用於表示變數型態的字母：
+字首字母    | 型態             | 說明  
+---------|------------------|-------------------------------------------
+`i`      | `int`            | 用以表示有號整數型態(`int`)
+`c`      | `char`           | 用以表示`char`型態
+`is`     | `bool`           | 用以表示其值是布林值
+`s`      | `std::string`    | 用以表示字串型態
+`str`    | `std::string`    | 用以表示字串型態
+`f`      | `float`          | 用以表示`float`型態
+`d`      | `double`         | 用以表示`double`型態
+`u`      |                  | 必須與`i`一起使用，用以表示無號整數，但不強迫使用
+`p`      |                  | 假如變數是一個指標變數，需使用這個字母來表示，可與前面混用
+`o`      |                  | 用以表示一個變數是一個物件，只要不符合C/C++的基本資料型態，皆可用這個字母來表示型態
+`a`      |                  | 用以表示該變數是一個陣列，必須與上述的字母搭配使用才能夠說明其元素的型態
+`v`      | `std::vector`    | 用以表示該變數是`std::vector`之物件，最好與前面混用，用以表示元素的型態，若要使用陣列建議使用`std::vector`
+
+這裡用基本資料型態來說明如何使用剛剛介紹的表格來給變數命名：
+```C++
+int iId;                    // 這個變數字首用 i 來表示 int 型態，用來表示一個 ID
+float fMoney;               // 這個變數字首用 f 來表示 float 型態，用來表示金錢的數值
+double dDistance;           // 這個變數字首用 d 來表示其形態是 double ，用來儲存一個物體移動的距離
+char cKey;                  // 這個變數的字首 c 用來表示其形態為 char ，用來儲存鍵盤輸入按鍵的ASCII之編碼
+unsigned int uiSizeOfArray; // 這個變數的字首 ui 用來表示其值為無號整數，用來記錄一個陣列的長度
+bool isFlag;                // 這個變數的字首 is 用以表示其值為布林值
+int aiScore[20];            // 這個變數的字首 ai 用以表示一個陣列，而且每個元素皆為整數型態
+std::vector<int> viVector;  // 這個變數的字首 vi 用以表示為 std::vector 之物件且其元素為 int 型態
+std::string sLastName;      // 這個變數的字首 s 用以表示其值為字串
+```
+這邊需要說明的是，當變數的型態為字串時，其字首字母可以使用`s`也可以用`str`，以上面的範例來說明，變數`sLastName`也可以取名為`strLastName`。
+
+在C++中可以宣告類別，並且建立類別的物件，字首`o`就可以用來表示一個變數為該類別之物件。在宣告類別時，也可以需告屬於該類別的屬性，這些屬性的名稱最好以`m_`當作字首，以便在該類別之成員函數中能夠辨認一個變數是區域變數還是該類別的屬性。
+```C++
+class myClass{
+    // private fields
+    private:
+        int m_iId;
+
+    // public methods
+    public:
+        myClass(int iId);
+        void printId();
+};  // End of class myClass
+
+myClass oClass; // 這個變數的字首 o 用來表示該變數為一個物件
+```
+從上面的例子中可以看到，`m_iId`的字首為`m_`，這表明了該變數為類別`myClass`的屬性，而且後面的`i`也說明該變數的型態是`int`。
+
+在C語言中字首`o`也適用於結構變數：
+```C
+struct Rectangle{
+    int iX;
+    int iY;
+    int iWidth;
+    int iHeight;
+};
+
+struct Rectangle oSquare;    // 這個變數的字首 o 用來表示該變數為一個物件
+```
+
+最後要說明的是指標變數，只要是指標變數，其名稱的字首必須使用`p`，後面再根據所指向之資料的型態來給予字母。
+```C++
+int *piId;
+float *pfMoney;
+myClass *poClass;
+```
+
+### 類別命名規則
+為了能夠與變數區別，類別的名稱字首最好使用`my`，而且要採用小寫駝峰式命名法來命名。若該類別是抽象類別，最好在名稱中使用`Abstract`或`Interface`字段，以便分辨出該類別是一般的類別還是抽象類別。
+
+以下的例子說明一般類別的名稱的命名方式：
+```C++
+class myCat{
+    // private fields
+    private:
+        std::string m_sName;
+
+    // public methods
+    public:
+        Cat(std::string sName){
+            m_sName = sName;
+        }   // End of constructor
+
+        void run(){
+            printf("%s run!", m_sName.c_str());
+        }   // End of run
+};  // End of class myCat
+```
+上面的例子中宣告了一個類別來模擬貓所擁有屬性和行為，這個類別的名稱命名為`myCat`。
+
+以下的例子說明抽象類別的命名方式：
+```C++
+class myAbstractAnimal{
+    // public methods
+    public:
+        virtual void walk() = 0;
+};  // End of class myAbstractAnimal
+```
+上面的例子中宣告了一個抽象類別，這個抽象類別擁有一個抽象成員函數`walk()`，這個類別的名稱命名為`myAbstractAnaimal`。
+
+### 命名空間
+在C++中可以定義命名空間(namespace)，命名空間的名稱建議採用駝峰式大寫命名法。以下是一個例子：
+```C++
+namespace Geometric{
+    struct Point{
+        int iX;
+        int iY;
+    };  // End of struct Point
+
+    struct Circle{
+        struct Point oCenter;
+        float fRadius;
+    };  // End of struct Circle
+
+    struct Rectangle{
+        struct Point oPosition;
+        int iWidth;
+        int iHeight;
+    };  // End of struct Rectangle
+}   // End of namespace Geometric
+```
+在上面的例子中，宣告了一個命名空間來包裹三個結構`Point`、`Circle`和`Rectangle`，他們分別用來描述幾何學中的點、圓形與矩形，該命名空間則命名為`Geometric`。
+
+### 巨集常數命名規則
+在C/C++中可以使用`#define`來定義一個常數，這種常數的命名方式最好是由多個單字與`_`組成，每個單字的字母可以全部都是大寫，也可以只有字首是大寫。重點是每個單字中間必須使用`_`隔開。
+
+以下是巨集常數的範例：
+```C++
+#define Num_Of_Array 100
+#define DATA_PATH "../save.data"
+```
+在上面的例子中，第一個用`#define`定義的常數`Num_Of_Array`是一個整數常數，用來表示一個陣列的長度；第二個用`#define`定義的常數`DATA_PATH`用來表示一個檔案的路徑。
+
+### 函式命名規則
+不管是一般的函式，或是隸屬於某個類別的成員函式，名稱最好採用小寫駝峰式命名法。此外，單字最好包含動詞，因為函式被定義來達成某件事，是一個用來完成某件事的動作。
+
+以下是幾個例子：
+```C++
+int readFile(const char* pcPath, char *pcLoadedContext);
+void writeFile(const char* pcPath, const char *pcNewContext);
+```
+在上面的例子中，第一個函式命名為`readFile`，用以讀取一個檔案的內容；第二個函式命名為`writeFile`，用以把一段文字寫進一個檔案中。
